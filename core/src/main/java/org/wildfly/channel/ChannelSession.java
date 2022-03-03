@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.wildfly.channel.spi.MavenVersionsResolver;
 
@@ -97,6 +95,34 @@ public class ChannelSession implements AutoCloseable {
         Channel.ResolveArtifactResult artifact = channel.resolveArtifact(groupId, artifactId, extension, classifier, latestVersion);
         recorder.recordStream(groupId, artifactId, latestVersion, channel);
         return new MavenArtifact(groupId, artifactId, extension, classifier, latestVersion, artifact.file);
+    }
+
+    public String findLatestMavenArtifactVersion(String groupId, String artifactId, String extension, String classifier, String baseVersion) throws UnresolvedMavenArtifactException {
+        requireNonNull(groupId);
+        requireNonNull(artifactId);
+
+        // find all latest versions from the different channels;
+        Map<String, Channel> found = new HashMap<>();
+        List<CompletableFuture<Void>> allPackages = new ArrayList<>();
+        for (Channel channel : channels) {
+            final CompletableFuture<Void> cf = new CompletableFuture<>();
+            Optional<Channel.ResolveLatestVersionResult> result = channel.resolveLatestVersion(groupId, artifactId, extension, classifier);
+            if (result.isPresent()) {
+                found.put(result.get().version, result.get().channel);
+            }
+        }
+
+        if (found.isEmpty()) {
+            if (baseVersion != null) {
+                return baseVersion;
+            }
+            throw new UnresolvedMavenArtifactException(String.format("Can not resolve latest Maven artifact (no stream found) : %s:%s:%s:%s", groupId, artifactId, extension, classifier));
+        }
+
+        // compare all latest version from the channels to find the latest overall
+        return found.keySet().stream()
+           .sorted(COMPARATOR.reversed())
+           .findFirst().get();
     }
 
     @Override
