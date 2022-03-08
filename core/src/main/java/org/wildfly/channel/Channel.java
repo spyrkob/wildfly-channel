@@ -271,9 +271,11 @@ public class Channel implements AutoCloseable {
         // first we looked into the required channels
         ResolveArtifactResult resultFromChannelRequirements = null;
         for (Channel requiredChannel : requiredChannels) {
-            try {
-                return requiredChannel.resolveArtifact(groupId, artifactId, extension, classifier, version);
-            } catch (UnresolvedMavenArtifactException e) {
+            if (requiredChannel.findStreamFor(groupId, artifactId).isPresent()) {
+                try {
+                    return requiredChannel.resolveArtifact(groupId, artifactId, extension, classifier, version);
+                } catch (UnresolvedMavenArtifactException e) {
+                }
             }
         }
 
