@@ -23,9 +23,12 @@ package org.wildfly.channel;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ChannelMapperTestCase {
 
@@ -41,5 +44,14 @@ public class ChannelMapperTestCase {
 
         System.out.println("channels = " + channels);
 
+    }
+
+    @Test
+    public void testWriteReadChannel() throws Exception {
+        final Channel channel = new Channel("test_id", "test_name", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY), true, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        final String yaml = ChannelMapper.toYaml(channel);
+
+        final Channel channel1 = ChannelMapper.fromString(yaml);
+        assertEquals(Vendor.Support.COMMUNITY, channel1.getVendor().getSupport());
     }
 }

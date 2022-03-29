@@ -47,7 +47,7 @@ public class MavenRepository {
     private URL url;
 
     @JsonCreator
-    MavenRepository(@JsonProperty("id") String id, @JsonProperty(value = "url", required = true) URL url) {
+    public MavenRepository(@JsonProperty("id") String id, @JsonProperty(value = "url", required = true) URL url) {
         this.id = id;
         this.url = url;
     }
