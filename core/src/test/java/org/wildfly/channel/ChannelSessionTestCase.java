@@ -86,7 +86,7 @@ public class ChannelSessionTestCase {
         for (int i = 0; i < manifests.length; i++) {
             channels.add(new Channel(null, null, null, null,
                     emptyList(),
-                    new ChannelManifestCoordinate("org.channels", "channel" + i, "1.0.0")));
+                    new ChannelManifestCoordinate("org.channels", "channel" + i, "1.0.0"), null));
             String manifest = manifests[i];
             Path manifestFile = Files.writeString(tempDir.resolve("manifest" + i +".yaml"), manifest);
 

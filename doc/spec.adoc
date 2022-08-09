@@ -65,6 +65,10 @@ Each element is composed of:
 ** One of the following, mutually exclusive fields, used to resolve the Channel Manifest:
 *** `gav` corresponds to Maven coordinates of the Manifest. It can either use format of `groupId:artifactId` (resulting in latest available version being used) or `groupId:artifactId:version` (resulting in concrete version being used)
 *** `url` corresponding to a static URL where the manifest file can be found.
+* An optional `blocklist` that defines Maven coordinates of blocklist artifact. This field is composed of
+** A required `groupId` that corresponds to Maven GroupId of the blocklist artifact.
+** A required `artifactId` that corresponds to Maven ArtifactId of the blocklist artifact.
+** A required `versionPattern` that corresponds to a Pattern through which the available blocklist artifacts are matched.
 
 A Channel Manifest is composed of following fields:
 
@@ -135,7 +139,45 @@ from the Maven repositories, an error is returned to the caller.
 If the stream defines a `versionPattern`, the version will be determined by querying the version of the artifacts from the
 Maven repositories and use the latest version that matches the pattern. If no version matches the pattern, an error is returned to the caller.
 
-### Changelog
+### Blocking artifact versions
+
+When using an open channel, a situation may arise where certain artifacts are promoted to the channel and later discovered to be invalid. As it’s impossible to remove artifacts already deployed into a repository, those versions have to blocklisted.
+
+The blocklist is a separate YAML artifact included in the channel itself. When channel resolves the blacklist artifact, it will always resolve the latest available version. Any changes to the blocked artifact versions can be done independently of channel changes.
+
+#### Format
+The blocklist file contains a list of stream GAVs with multiple versions:
+```
+---
+exclusions:
+- groupId: io.undertow
+artifactId: undertow-core
+versions: [2.2.18.Final, 2.2.17.Final]
+…
+```
+The artifactId can use a wildcard syntax to refer to all the artifacts with the same groupId
+```
+---
+exclusions:
+- groupId: io.undertow
+artifactId: “*”
+versions: [2.2.18.Final, 2.2.17.Final]
+```
+
+### Resolving channel blocklist
+The blocklist is resolved when a channel is initialized. If no blocklist artifact can be resolved with supplied GAVs, the channel treats it as an empty blocklist.
+A blocklist applies only to the channel that defined it, not its required channels.
+
+### Resolving artifact version
+During artifact version resolution, a stream matching artifact GA is located in the channel. If the stream uses concrete versions, that version of the artifact is resolved and returned to the user.
+If the stream uses `versionPattern`, the blocklist is checked for excluded versions. The excluded versions are removed from the set of available artifact versions before the latest remaining version matching the stream’s pattern is used to resolve the artifact.
+
+If the blocklist excludes all available artifact versions, `UnresolvedMavenArtifactException` is thrown.
+
+The blocklist is ignored when using `resolveDirectMavenArtifact` method.
+
+
+## Changelog
 
 ### Version 2.0.0
 
@@ -144,4 +186,7 @@ Maven repositories and use the latest version that matches the pattern. If no ve
 ### Version 1.0.0
 
 * Initial release of the Channel specification
+
+### Version 1.0.1
+* Adding `blocklist` element to the Channel
 

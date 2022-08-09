@@ -100,6 +100,24 @@
           "required": ["url"]
         }
       ]
+    },
+    "blocklist": {
+      "description": "Blocklist used by this channel.",
+      "type": "object",
+      "properties": {
+        "groupId": {
+          "description": "GroupID Maven coordinate of the blocklist",
+          "type": "string"
+        },
+        "artifactId": {
+          "description": "ArtifactID Maven coordinate of the blocklist",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version Maven coordinate of the blocklist",
+          "type": "string"
+        }
+      }
     }
   }
 }

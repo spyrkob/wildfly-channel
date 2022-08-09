@@ -1,0 +1,17 @@
+schemaVersion: "2.0.0"
+name: My Channel
+description: |-
+  This is my channel
+  with my stuff
+vendor:
+  name: My Vendor
+  support: community
+blocklist:
+  groupId: org.wildfly
+  artifactId: blocklist
+  versionPattern: ".*"
+repositories:
+  - id: test
+    url: http://test.te
+manifest:
+  gav: org.test:manifest
