@@ -16,6 +16,7 @@
  */
 package org.wildfly.channel;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +24,10 @@ class ChannelBuilder {
     private String name;
     private List<Repository> repositories = new ArrayList<>();
     private ChannelManifestCoordinate manifestCoordinate;
+    private BlocklistCoordinate blocklistCoordinate;
 
     Channel build() {
-        return new Channel(name, null, null, repositories, manifestCoordinate);
+        return new Channel(name, null, null, repositories, manifestCoordinate, blocklistCoordinate);
     }
 
     ChannelBuilder setName(String name) {
@@ -40,6 +42,15 @@ class ChannelBuilder {
 
     public ChannelBuilder setManifestCoordinate(String groupId, String artifactId, String version) {
         this.manifestCoordinate = new ChannelManifestCoordinate(groupId, artifactId, version);
+        return this;
+    }
+
+    public ChannelBuilder setBlocklist(String groupId, String artifactId, String version) {
+        if (version == null) {
+            this.blocklistCoordinate = new BlocklistCoordinate(groupId, artifactId);
+        } else {
+            this.blocklistCoordinate = new BlocklistCoordinate(groupId, artifactId, version);
+        }
         return this;
     }
 }

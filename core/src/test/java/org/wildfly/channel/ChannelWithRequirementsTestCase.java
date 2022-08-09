@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -346,9 +345,11 @@ public class ChannelWithRequirementsTestCase {
                         "      version: 1.0.0";
         mockManifest(resolver, manifest, "org.channels:base-manifest:1.0.0");
 
-        List<Channel> channels = List.of(new Channel("root level requiring channel", null, null,
-                List.of(new Repository("test", "test")),
-                new ChannelManifestCoordinate("org.channels", "base-manifest", "1.0.0")));
+        List<Channel> channels = List.of(new ChannelBuilder()
+                .setName("root level requiring channel")
+                .addRepository("test", "test")
+                .setManifestCoordinate("org.channels", "base-manifest", "1.0.0")
+                .build());
 
         // check that streams from required channel propagate to root channel
         try (ChannelSession session = new ChannelSession(channels, factory)) {

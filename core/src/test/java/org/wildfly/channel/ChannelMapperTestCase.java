@@ -31,7 +31,8 @@ public class ChannelMapperTestCase {
         final Channel channel = new Channel("test_name", "test_desc",
                 new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ChannelManifestCoordinate("test.channels", "channel"));
+                new ChannelManifestCoordinate("test.channels", "channel"),
+                new BlocklistCoordinate("test.block", "blocklist"));
         final String yaml = ChannelMapper.toYaml(channel);
 
         final Channel channel1 = ChannelMapper.fromString(yaml).get(0);
@@ -42,10 +43,12 @@ public class ChannelMapperTestCase {
     public void testWriteMultipleChannels() throws Exception {
         final Channel channel1 = new Channel("test_name_1", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ChannelManifestCoordinate("test.channels", "channel"));
+                new ChannelManifestCoordinate("test.channels", "channel"),
+                new BlocklistCoordinate("test.block", "blocklist"));
         final Channel channel2 = new Channel("test_name_2", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ChannelManifestCoordinate(new URL("http://test.channels/channels")));
+                new ChannelManifestCoordinate(new URL("http://test.channels/channels")),
+                new BlocklistCoordinate("test.block", "blocklist"));
         final String yaml = ChannelMapper.toYaml(channel1, channel2);
 
         System.out.println(yaml);
