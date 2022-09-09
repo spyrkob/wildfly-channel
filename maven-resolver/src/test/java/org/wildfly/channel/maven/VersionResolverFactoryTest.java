@@ -25,21 +25,31 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.maven.artifact.repository.metadata.Versioning;
+import org.apache.maven.artifact.repository.metadata.io.xpp3.MetadataXpp3Writer;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.metadata.DefaultMetadata;
+import org.eclipse.aether.metadata.Metadata;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.resolution.MetadataRequest;
+import org.eclipse.aether.resolution.MetadataResult;
 import org.eclipse.aether.resolution.VersionRangeRequest;
 import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
@@ -227,7 +237,7 @@ public class VersionResolverFactoryTest {
         ArtifactResult artifactResult = new ArtifactResult(new ArtifactRequest());
         Artifact artifact = mock(Artifact.class);
         artifactResult.setArtifact(artifact);
-        when (artifact.getFile()).thenReturn(artifactFile);
+        when(artifact.getFile()).thenReturn(artifactFile);
         VersionRangeResult versionRangeResult = new VersionRangeResult(new VersionRangeRequest());
         Version v100 = mock(Version.class);
         final ArgumentCaptor<ArtifactRequest> artifactRequestArgumentCaptor = ArgumentCaptor.forClass(ArtifactRequest.class);
@@ -239,6 +249,42 @@ public class VersionResolverFactoryTest {
         List<URL> resolvedURL = resolver.resolveChannelMetadata(List.of(new ChannelCoordinate("org.test", "channel", "1.0.0")));
         assertEquals(artifactFile.toURI().toURL(), resolvedURL.get(0));
         assertEquals("1.0.0", artifactRequestArgumentCaptor.getAllValues().get(0).getArtifact().getVersion());
+    }
+
+    public void testResolveMetadata() throws Exception {
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        final MetadataResult result1 = getMetadataResult("1.0.0.Final");
+        final MetadataResult result2 = getMetadataResult("1.0.1.Final");
+        when(system.resolveMetadata(eq(session), any())).thenReturn(List.of(result1, result2));
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        final String res = resolver.getReleaseVersion("org.foo", "bar");
+
+        assertEquals("1.0.1.Final", res);
+    }
+
+    private MetadataResult getMetadataResult(String releaseVersion) throws IOException {
+        final Path tempFile = Files.createTempFile("test", "xml");
+        tempFile.toFile().deleteOnExit();
+        final org.apache.maven.artifact.repository.metadata.Metadata resMetadata = new org.apache.maven.artifact.repository.metadata.Metadata();
+        resMetadata.setGroupId("org.foo");
+        resMetadata.setArtifactId("bar");
+        final Versioning versioning = new Versioning();
+        versioning.setRelease(releaseVersion);
+        versioning.setLatest("1.0.1.Final-SNAPSHOT");
+        versioning.setVersions(List.of("1.0.1.Final-SNAPSHOT", releaseVersion));
+        resMetadata.setVersioning(versioning);
+        new MetadataXpp3Writer().write(new FileWriter(tempFile.toFile()), resMetadata);
+
+        final MetadataResult result1 = new MetadataResult(new MetadataRequest());
+        final Metadata metadata = new DefaultMetadata("org.foo", "bar", "maven-metadata.xml", Metadata.Nature.RELEASE)
+           .setFile(tempFile.toFile());
+        result1.setMetadata(metadata);
+        return result1;
     }
 }
 

@@ -93,6 +93,16 @@ public interface MavenVersionsResolver extends Closeable {
     */
    List<URL> resolveChannelMetadata(List<? extends ChannelMetadataCoordinate> manifestCoords) throws UnresolvedMavenArtifactException;
 
+   /**
+    * Returns the latest {@code release} version according to the repositorie's Maven metadata.
+    *
+    * @param groupId Maven GroupId - required
+    * @param artifactId Maven ArtifactId - required
+    *
+    * @return the set of versions.
+    */
+   String getReleaseVersion(String groupId, String artifactId);
+
    default void close() {
    }
 

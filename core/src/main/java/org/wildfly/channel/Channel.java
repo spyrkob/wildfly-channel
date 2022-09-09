@@ -56,6 +56,8 @@ public class Channel implements AutoCloseable {
         LATEST,
         @JsonProperty("original")
         ORIGINAL,
+        @JsonProperty("release")
+        RELEASE,
         @JsonProperty("none")
         NONE
     }
@@ -315,6 +317,9 @@ public class Channel implements AutoCloseable {
                     } else {
                         return Optional.empty();
                     }
+                case RELEASE:
+                    String releaseVersion = resolver.getReleaseVersion(groupId, artifactId);
+                    return Optional.of(new ResolveLatestVersionResult(releaseVersion, this));
                 default:
                     return Optional.empty();
             }

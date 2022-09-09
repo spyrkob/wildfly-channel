@@ -517,6 +517,31 @@ public class ChannelSessionTestCase {
     }
 
     @Test
+    public void testChannelWithReleaseStrategy() throws Exception {
+        final String manifest =
+                "schemaVersion: " + ChannelManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
+                "streams:\n" +
+                "  - groupId: org.foo\n" +
+                "    artifactId: foo\n" +
+                "    version: \"25.0.0.Final\"";
+
+        MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
+        MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
+        File resolvedArtifactFile = mock(File.class);
+
+        when(factory.create(any())).thenReturn(resolver);
+        when(resolver.getReleaseVersion(eq("org.foo"), eq("bar"))).thenReturn("25.0.1.Final");
+        when(resolver.resolveArtifact(eq("org.foo"), eq("bar"), eq(null), eq(null), eq("25.0.1.Final"))).thenReturn(resolvedArtifactFile);
+        when(resolver.getAllVersions("org.foo", "bar", null, null)).thenReturn(Set.of("25.0.1.Final", "25.0.0.Final"));
+        final List<Channel> channels = mockChannel(resolver, tempDir, Channel.NoStreamStrategy.RELEASE, manifest);
+
+        try (ChannelSession session = new ChannelSession(channels, factory)) {
+            MavenArtifact resolvedArtifact = session.resolveMavenArtifact("org.foo", "bar", null, null, "25.0.0.Final");
+            assertEquals("25.0.1.Final", resolvedArtifact.getVersion());
+        }
+    }
+
+    @Test
     public void testChannelWithStrictStrategy() throws Exception {
         final String manifest =
                 "schemaVersion: " + ChannelManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +

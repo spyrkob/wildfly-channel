@@ -66,6 +66,7 @@
       "enum": [
         "latest",
         "original",
+        "release",
         "none"
       ]
     },
