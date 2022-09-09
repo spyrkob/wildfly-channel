@@ -20,6 +20,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static org.wildfly.channel.version.VersionMatcher.COMPARATOR;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -34,12 +35,12 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.wildfly.channel.spi.MavenVersionsResolver;
 import org.wildfly.channel.version.VersionMatcher;
-import org.wildfly.channel.version.VersionPatternMatcher;
 
 /**
  * Java representation of a Channel.
@@ -48,6 +49,30 @@ public class Channel implements AutoCloseable {
 
     public static final String CLASSIFIER="channel";
     public static final String EXTENSION="yaml";
+
+    /**
+     * Strategies for resolving artifact versions if it is not listed in streams.
+     * <ul>
+     *    <li>LATEST - Use the latest version according to {@link VersionMatcher#COMPARATOR}</li>
+     *    <li>ORIGINAL - Use the {@code baseVersion} if provided in the query</li>
+     *    <li>MAVEN_LATEST - Use the value of {@code <latest>} in maven-metadata.xml</li>
+     *    <li>MAVEN_RELEASE - Use the value of {@code <release>} in maven-metadata.xml</li>
+     *    <li>NONE - throw {@link UnresolvedMavenArtifactException}</li>
+     * </ul>
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    public enum NoStreamStrategy {
+        @JsonProperty("latest")
+        LATEST,
+        @JsonProperty("original")
+        ORIGINAL,
+        @JsonProperty("maven-latest")
+        MAVEN_LATEST,
+        @JsonProperty("maven-release")
+        MAVEN_RELEASE,
+        @JsonProperty("none")
+        NONE
+    }
 
     /** Version of the schema used by this channel.
      * This is a required field.
@@ -80,6 +105,12 @@ public class Channel implements AutoCloseable {
     List<Channel> requiredChannels = Collections.emptyList();
 
     /**
+     * Strategy for resolving artifact versions if it is not listed in streams.
+     * This is an optional field. If not specified 'LATEST' strategy is used.
+     */
+    private NoStreamStrategy noStreamStrategy;
+
+    /**
      * Optional channel manifest specifying streams.
      */
     private ChannelManifest channelManifest;
@@ -99,21 +130,23 @@ public class Channel implements AutoCloseable {
     /**
      * Representation of a Channel resource using the current schema version.
      *
-     * @see #Channel(String, String, String, Vendor, List, ChannelManifestCoordinate, BlocklistCoordinate)
+     * @see #Channel(String, String, String, Vendor, List, ChannelManifestCoordinate, BlocklistCoordinate, NoStreamStrategy)
      */
     public Channel(String name,
                    String description,
                    Vendor vendor,
                    List<Repository> repositories,
                    ChannelManifestCoordinate manifestCoordinate,
-                   BlocklistCoordinate blocklistCoordinate) {
+                   BlocklistCoordinate blocklistCoordinate,
+                   NoStreamStrategy noStreamStrategy){
         this(ChannelMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
                 vendor,
                 repositories,
                 manifestCoordinate,
-                blocklistCoordinate);
+                blocklistCoordinate,
+                noStreamStrategy);
     }
 
     /**
@@ -123,6 +156,7 @@ public class Channel implements AutoCloseable {
      * @param name the name of the channel - can be {@code null}
      * @param description the description of the channel - can be {@code null}
      * @param vendor the vendor of the channel - can be {@code null}
+     * @param noStreamStrategy - strategy for resolving version if the artifact is not listed in steams - can be {@code null}
      */
     @JsonCreator
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "vendor", "requires", "streams" })
@@ -133,7 +167,8 @@ public class Channel implements AutoCloseable {
                    @JsonProperty(value = "repositories")
                    @JsonInclude(NON_EMPTY) List<Repository> repositories,
                    @JsonProperty(value = "manifest") ChannelManifestCoordinate manifestCoordinate,
-                   @JsonProperty(value = "blocklist") @JsonInclude(NON_EMPTY) BlocklistCoordinate blocklistCoordinate) {
+                   @JsonProperty(value = "blocklist") @JsonInclude(NON_EMPTY) BlocklistCoordinate blocklistCoordinate,
+                   @JsonProperty(value = "resolves-if-no-stream") NoStreamStrategy noStreamStrategy) {
         this.schemaVersion = schemaVersion;
         this.name = name;
         this.description = description;
@@ -141,6 +176,7 @@ public class Channel implements AutoCloseable {
         this.repositories = (repositories != null) ? repositories : emptyList();
         this.manifestCoordinate = manifestCoordinate;
         this.blocklistCoordinate = blocklistCoordinate;
+        this.noStreamStrategy = (noStreamStrategy != null) ? noStreamStrategy: NoStreamStrategy.ORIGINAL;
     }
 
     @JsonInclude
@@ -171,6 +207,10 @@ public class Channel implements AutoCloseable {
     @JsonProperty(value = "manifest")
     public ChannelManifestCoordinate getManifestRef() {
         return manifestCoordinate;
+    }
+    @JsonInclude(NON_EMPTY)
+    public NoStreamStrategy getNoStreamStrategy() {
+        return noStreamStrategy;
     }
 
     // marks an instance of Channel as dependency of another channel
@@ -275,7 +315,9 @@ public class Channel implements AutoCloseable {
             version = latest.orElseThrow(() -> new RuntimeException(String.format("Can not determine the latest version for Maven artifact %s:%s:%s:%s",
                     groupId, artifactId, ChannelManifest.EXTENSION, ChannelManifest.CLASSIFIER)));
         }
-        final Channel requiredChannel = new Channel(null, null, null, repositories, new ChannelManifestCoordinate(groupId, artifactId, version), null);
+        final Channel requiredChannel = new Channel(null, null, null, repositories,
+                new ChannelManifestCoordinate(groupId, artifactId, version), null,
+                NoStreamStrategy.NONE);
         try {
             requiredChannel.init(factory, channels);
         } catch (UnresolvedMavenArtifactException e) {
@@ -336,7 +378,7 @@ public class Channel implements AutoCloseable {
                 .findFirst().orElseThrow();
     }
 
-    Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier) {
+    Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier, String baseVersion) {
         requireNonNull(groupId);
         requireNonNull(artifactId);
         requireNonNull(resolver);
@@ -348,16 +390,37 @@ public class Channel implements AutoCloseable {
             // we return the latest value from the required channels
             Map<String, Channel> foundVersions = new HashMap<>();
             for (Channel requiredChannel : requiredChannels) {
-                Optional<Channel.ResolveLatestVersionResult> found = requiredChannel.resolveLatestVersion(groupId, artifactId, extension, classifier);
+                Optional<Channel.ResolveLatestVersionResult> found = requiredChannel.resolveLatestVersion(groupId, artifactId, extension, classifier, baseVersion);
                 if (found.isPresent()) {
                     foundVersions.put(found.get().version, found.get().channel);
                 }
             }
-            Optional<String> foundVersionInRequiredChannels = foundVersions.keySet().stream().sorted(VersionMatcher.COMPARATOR.reversed()).findFirst();
+            Optional<String> foundVersionInRequiredChannels = foundVersions.keySet().stream().sorted(COMPARATOR.reversed()).findFirst();
             if (foundVersionInRequiredChannels.isPresent()) {
                 return Optional.of(new ResolveLatestVersionResult(foundVersionInRequiredChannels.get(), foundVersions.get(foundVersionInRequiredChannels.get())));
             }
-            return Optional.empty();
+
+            // finally try the NoStreamStrategy
+            switch (noStreamStrategy) {
+                case ORIGINAL:
+                    return Optional.of(new ResolveLatestVersionResult(baseVersion, this));
+                case LATEST:
+                    Set<String> versions = resolver.getAllVersions(groupId, artifactId, extension, classifier);
+                    final Optional<String> latestVersion = versions.stream().sorted(COMPARATOR.reversed()).findFirst();
+                    if (latestVersion.isPresent()) {
+                        return Optional.of(new ResolveLatestVersionResult(latestVersion.get(), this));
+                    } else {
+                        return Optional.empty();
+                    }
+                case MAVEN_LATEST:
+                    String latestMetadataVersion = resolver.getMetadataLatestVersion(groupId, artifactId);
+                    return Optional.of(new ResolveLatestVersionResult(latestMetadataVersion, this));
+                case MAVEN_RELEASE:
+                    String releaseMetadataVersion = resolver.getMetadataReleaseVersion(groupId, artifactId);
+                    return Optional.of(new ResolveLatestVersionResult(releaseMetadataVersion, this));
+                default:
+                    return Optional.empty();
+            }
         }
 
         Stream stream = foundStream.get();

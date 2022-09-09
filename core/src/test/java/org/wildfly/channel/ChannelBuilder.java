@@ -25,9 +25,10 @@ class ChannelBuilder {
     private List<Repository> repositories = new ArrayList<>();
     private ChannelManifestCoordinate manifestCoordinate;
     private BlocklistCoordinate blocklistCoordinate;
+    private Channel.NoStreamStrategy strategy;
 
     Channel build() {
-        return new Channel(name, null, null, repositories, manifestCoordinate, blocklistCoordinate);
+        return new Channel(name, null, null, repositories, manifestCoordinate, blocklistCoordinate, strategy);
     }
 
     ChannelBuilder setName(String name) {
@@ -51,6 +52,11 @@ class ChannelBuilder {
         } else {
             this.blocklistCoordinate = new BlocklistCoordinate(groupId, artifactId, version);
         }
+        return this;
+    }
+
+    public ChannelBuilder setResolveStrategy(Channel.NoStreamStrategy strategy) {
+        this.strategy = strategy;
         return this;
     }
 }
