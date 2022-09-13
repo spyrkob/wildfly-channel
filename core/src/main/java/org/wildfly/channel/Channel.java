@@ -50,14 +50,26 @@ public class Channel implements AutoCloseable {
     public static final String CLASSIFIER="channel";
     public static final String EXTENSION="yaml";
 
+    /**
+     * Strategies for resolving artifact versions if it is not listed in streams.
+     * <ul>
+     *    <li>LATEST - Use the latest version according to {@link VersionMatcher#COMPARATOR}</li>
+     *    <li>ORIGINAL - Use the {@code baseVersion} if provided in the query</li>
+     *    <li>MAVEN_LATEST - Use the value of {@code <latest>} in maven-metadata.xml</li>
+     *    <li>MAVEN_RELEASE - Use the value of {@code <release>} in maven-metadata.xml</li>
+     *    <li>NONE - throw {@link UnresolvedMavenArtifactException}</li>
+     * </ul>
+     */
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     public enum NoStreamStrategy {
         @JsonProperty("latest")
         LATEST,
         @JsonProperty("original")
         ORIGINAL,
-        @JsonProperty("release")
-        RELEASE,
+        @JsonProperty("maven-latest")
+        MAVEN_LATEST,
+        @JsonProperty("maven-release")
+        MAVEN_RELEASE,
         @JsonProperty("none")
         NONE
     }
@@ -97,6 +109,10 @@ public class Channel implements AutoCloseable {
      */
     private List<Channel> requiredChannels = Collections.emptyList();
 
+    /**
+     * Strategy for resolving artifact versions if it is not listed in streams.
+     * This is an optional field. If not specified 'LATEST' strategy is used.
+     */
     private NoStreamStrategy noStreamStrategy;
 
     /**
@@ -119,7 +135,7 @@ public class Channel implements AutoCloseable {
     /**
      * Representation of a Channel resource using the current schema version.
      *
-     * @see #Channel(String, String, Vendor, List, List, ChannelManifestCoordinate)
+     * @see #Channel(String, String, Vendor, List, List, ChannelManifestCoordinate, NoStreamStrategy)
      */
     public Channel(String name,
                    String description,
@@ -147,7 +163,6 @@ public class Channel implements AutoCloseable {
      * @param vendor the vendor of the channel - can be {@code null}
      * @param channelRequirements the required channels - can be {@code null}
      * @param noStreamStrategy - strategy for resolving version if the artifact is not listed in steams - can be {@code null}
-     * @param streams the streams defined by the channel - can be {@code null}
      */
     @JsonCreator
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "vendor", "requires", "streams" })
@@ -203,11 +218,13 @@ public class Channel implements AutoCloseable {
     }
 
     @JsonProperty(value = "manifest")
+    @JsonInclude(NON_NULL)
     public ChannelManifestCoordinate getManifestRef() {
         return manifestCoordinate;
     }
 
     @JsonInclude(NON_EMPTY)
+    @JsonProperty("resolves-if-no-stream")
     public NoStreamStrategy getNoStreamStrategy() {
         return noStreamStrategy;
     }
@@ -317,9 +334,12 @@ public class Channel implements AutoCloseable {
                     } else {
                         return Optional.empty();
                     }
-                case RELEASE:
-                    String releaseVersion = resolver.getReleaseVersion(groupId, artifactId);
-                    return Optional.of(new ResolveLatestVersionResult(releaseVersion, this));
+                case MAVEN_LATEST:
+                    String latestMetadataVersion = resolver.getMetadataLatestVersion(groupId, artifactId);
+                    return Optional.of(new ResolveLatestVersionResult(latestMetadataVersion, this));
+                case MAVEN_RELEASE:
+                    String releaseMetadataVersion = resolver.getMetadataReleaseVersion(groupId, artifactId);
+                    return Optional.of(new ResolveLatestVersionResult(releaseMetadataVersion, this));
                 default:
                     return Optional.empty();
             }

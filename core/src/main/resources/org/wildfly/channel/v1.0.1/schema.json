@@ -65,9 +65,10 @@
       "type": "string",
       "enum": [
         "latest",
-        "original",
-        "release",
-        "none"
+        "maven-latest",
+        "maven-release",
+        "none",
+        "original"
       ]
     },
     "streams":{

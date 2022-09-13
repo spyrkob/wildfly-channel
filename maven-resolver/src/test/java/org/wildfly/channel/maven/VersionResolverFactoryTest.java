@@ -251,40 +251,97 @@ public class VersionResolverFactoryTest {
         assertEquals("1.0.0", artifactRequestArgumentCaptor.getAllValues().get(0).getArtifact().getVersion());
     }
 
-    public void testResolveMetadata() throws Exception {
+    public void testResolveReleaseFromMetadata() throws Exception {
         RepositorySystem system = mock(RepositorySystem.class);
         RepositorySystemSession session = mock(RepositorySystemSession.class);
 
-        final MetadataResult result1 = getMetadataResult("1.0.0.Final");
-        final MetadataResult result2 = getMetadataResult("1.0.1.Final");
+        final MetadataResult result1 = getMetadataResult("1.0.0.Final", "1.0.1.Final-SNAPSHOT");
+        final MetadataResult result2 = getMetadataResult("1.0.1.Final", "1.0.1.Final-SNAPSHOT");
         when(system.resolveMetadata(eq(session), any())).thenReturn(List.of(result1, result2));
 
         VersionResolverFactory factory = new VersionResolverFactory(system, session);
         MavenVersionsResolver resolver = factory.create(Collections.emptyList());
 
-        final String res = resolver.getReleaseVersion("org.foo", "bar");
+        final String res = resolver.getMetadataReleaseVersion("org.foo", "bar");
 
         assertEquals("1.0.1.Final", res);
     }
 
-    private MetadataResult getMetadataResult(String releaseVersion) throws IOException {
-        final Path tempFile = Files.createTempFile("test", "xml");
-        tempFile.toFile().deleteOnExit();
+    @Test
+    public void testResolveLatestFromMetadata() throws Exception {
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        final MetadataResult result1 = getMetadataResult("1.0.0.Final", "1.0.0.Final");
+        final MetadataResult result2 = getMetadataResult("1.0.0.Final", "1.0.1.Final");
+        when(system.resolveMetadata(eq(session), any())).thenReturn(List.of(result1, result2));
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        final String res = resolver.getMetadataLatestVersion("org.foo", "bar");
+
+        assertEquals("1.0.1.Final", res);
+    }
+
+    @Test
+    public void testResolveLatestFromMetadataNoVersioning() throws Exception {
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        final org.apache.maven.artifact.repository.metadata.Metadata resMetadata = new org.apache.maven.artifact.repository.metadata.Metadata();
+        resMetadata.setGroupId("org.foo");
+        resMetadata.setArtifactId("bar");
+
+        final MetadataResult result = wrapMetadata(resMetadata);
+        when(system.resolveMetadata(eq(session), any())).thenReturn(List.of(result));
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        Assertions.assertThrows(UnresolvedMavenArtifactException.class, () -> {
+            resolver.getMetadataLatestVersion("org.foo", "bar");
+        });
+    }
+
+    @Test
+    public void testResolveLatestFromMetadataNoLatestVersion() throws Exception {
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        final MetadataResult result = getMetadataResult("1.0.0.Final", null);
+        when(system.resolveMetadata(eq(session), any())).thenReturn(List.of(result));
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        Assertions.assertThrows(UnresolvedMavenArtifactException.class, () -> {
+            resolver.getMetadataLatestVersion("org.foo", "bar");
+        });
+    }
+
+    private MetadataResult getMetadataResult(String releaseVersion, String latestVersion) throws IOException {
         final org.apache.maven.artifact.repository.metadata.Metadata resMetadata = new org.apache.maven.artifact.repository.metadata.Metadata();
         resMetadata.setGroupId("org.foo");
         resMetadata.setArtifactId("bar");
         final Versioning versioning = new Versioning();
         versioning.setRelease(releaseVersion);
-        versioning.setLatest("1.0.1.Final-SNAPSHOT");
+        versioning.setLatest(latestVersion);
         versioning.setVersions(List.of("1.0.1.Final-SNAPSHOT", releaseVersion));
         resMetadata.setVersioning(versioning);
-        new MetadataXpp3Writer().write(new FileWriter(tempFile.toFile()), resMetadata);
 
-        final MetadataResult result1 = new MetadataResult(new MetadataRequest());
+        return wrapMetadata(resMetadata);
+    }
+
+    private MetadataResult wrapMetadata(org.apache.maven.artifact.repository.metadata.Metadata resMetadata) throws IOException {
+        final Path tempFile = Files.createTempFile("test", "xml");
+        tempFile.toFile().deleteOnExit();
+        new MetadataXpp3Writer().write(new FileWriter(tempFile.toFile()), resMetadata);
+        final MetadataResult result = new MetadataResult(new MetadataRequest());
         final Metadata metadata = new DefaultMetadata("org.foo", "bar", "maven-metadata.xml", Metadata.Nature.RELEASE)
            .setFile(tempFile.toFile());
-        result1.setMetadata(metadata);
-        return result1;
+        result.setMetadata(metadata);
+        return result;
     }
 }
 

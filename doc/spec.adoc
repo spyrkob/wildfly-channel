@@ -56,7 +56,8 @@ A channel is composed of several fields:
 * An optional `resolves-if-no-stream` that defines strategy for version resolution if the artifact has not been found in the `streams` collection. Allowed values are:
 ** `original` - fallback to the `baseVersion` provided when querying the channel. Default value if no strategy is provided.
 ** `latest` - use the latest version found in the Maven repositories
-** `release` - the latest version marked as `release` in the Maven repositories
+** `maven-latest` - a version marked as `latest` in the Maven metadata
+** `maven-release` - a version marked as `release` in the Maven metadata
 ** `none` - do not attempt to resolve versions of artifact not listed in the `streams` collection
 * A collection of `requires`. Each element of that list corresponds to another channel that is required to provision components from this channel.
 This field can be used for layered products to enforce their dependencies so that the installation only need to update the top level channel to get updates from all required channels.
@@ -138,7 +139,7 @@ If no stream that matches the artifact have been found, version is resolved usin
 An error is returned to the caller if
 
 * the fallback strategy is `none`
-* the fallback strategy is `latest` or `release` but underlying Maven repository contains no artifacts with required `groupId` and `artifactId`
+* the fallback strategy is `latest`, `maven-latest` or `maven-release` but underlying Maven repository contains no metadata for artifacts with required `groupId` and `artifactId`
 
 If the stream defines a `version`, the artifact will be resolved based on this version. If that version of the artifact can not be pulled
 from the Maven repositories, an error is returned to the caller.

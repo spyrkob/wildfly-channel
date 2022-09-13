@@ -18,7 +18,6 @@ package org.wildfly.channel.spi;
 
 import java.io.Closeable;
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -95,13 +94,28 @@ public interface MavenVersionsResolver extends Closeable {
 
    /**
     * Returns the latest {@code release} version according to the repositorie's Maven metadata.
+    * Returns the {@code <release>} version according to the repositories' Maven metadata. If multiple repositories
+    * contain the same artifact, {@link org.wildfly.channel.version.VersionMatcher#COMPARATOR} is used to choose version.
     *
     * @param groupId Maven GroupId - required
     * @param artifactId Maven ArtifactId - required
     *
-    * @return the set of versions.
+    * @return the {@code release} version.
+    * @throws UnresolvedMavenArtifactException if the metadata can not be resolved or is incomplete.
     */
-   String getReleaseVersion(String groupId, String artifactId);
+   String getMetadataReleaseVersion(String groupId, String artifactId);
+
+   /**
+    * Returns the {@code <latest>} version according to the repositories' Maven metadata. If multiple repositories
+    * contain the same artifact, {@link org.wildfly.channel.version.VersionMatcher#COMPARATOR} is used to choose version.
+    *
+    * @param groupId Maven GroupId - required
+    * @param artifactId Maven ArtifactId - required
+    *
+    * @return the {@code latest} version.
+    * @throws UnresolvedMavenArtifactException if the metadata can not be resolved or is incomplete.
+    */
+   String getMetadataLatestVersion(String groupId, String artifactId);
 
    default void close() {
    }
