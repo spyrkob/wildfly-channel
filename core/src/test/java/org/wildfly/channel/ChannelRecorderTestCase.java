@@ -29,6 +29,7 @@ import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -36,13 +37,18 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.wildfly.channel.spi.MavenVersionsResolver;
 
 public class ChannelRecorderTestCase {
+
+    @TempDir
+    private Path tempDir;
+
     @Test
     public void testChannelRecorder() throws IOException, UnresolvedMavenArtifactException {
 
-        List<Channel> channels = ChannelMapper.fromString("---\n" +
+        String manifest1 = "---\n" +
                 "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.wildfly\n" +
@@ -53,18 +59,18 @@ public class ChannelRecorderTestCase {
                 "    versionPattern: '18\\.\\d+\\.\\d+.Final'\n" +
                 "  - groupId: io.undertow\n" +
                 "    artifactId: '*'\n" +
-                "    versionPattern: '2\\.\\1\\.\\d+.Final'\n" +
-                "---\n" +
-                "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+                "    versionPattern: '2\\.\\1\\.\\d+.Final'\n";
+
+        String manifest2 = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: io.undertow\n" +
                 "    artifactId: '*'\n" +
-                "    versionPattern: '2\\.\\d+\\.\\d+.Final'");
-        Assertions.assertNotNull(channels);
-        assertEquals(2, channels.size());
+                "    versionPattern: '2\\.\\d+\\.\\d+.Final'";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
+
+        final List<Channel> channels = ChannelSessionTestCase.mockChannel(resolver, tempDir, manifest1, manifest2);
 
         when(factory.create())
                 .thenReturn(resolver);
@@ -85,10 +91,10 @@ public class ChannelRecorderTestCase {
             // This should not be recorded, size should remain 4.
             session.resolveMavenArtifact("io.undertow", "undertow-servlet", null, null, "1.0.0.Final");
 
-            Channel recordedChannel = session.getRecordedChannel();
-            System.out.println(ChannelMapper.toYaml(recordedChannel));
+            Manifest recordedManifest = session.getRecordedChannel();
+            System.out.println(ManifestMapper.toYaml(recordedManifest));
 
-            Collection<Stream> streams = recordedChannel.getStreams();
+            Collection<Stream> streams = recordedManifest.getStreams();
 
             assertStreamExistsFor(streams, "org.wildfly", "wildfly-ee-galleon-pack", "24.0.0.Final");
             assertStreamExistsFor(streams, "org.wildfly.core", "wildfly.core.cli", "18.0.0.Final");

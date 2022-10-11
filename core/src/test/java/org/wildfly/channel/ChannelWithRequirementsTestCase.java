@@ -19,21 +19,30 @@ package org.wildfly.channel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.wildfly.channel.spi.MavenVersionsResolver;
 
 public class ChannelWithRequirementsTestCase {
+
+    @TempDir
+    private Path tempDir;
 
     /**
      * Test that newest version of required channel is used when required channel version is not specified
@@ -49,6 +58,9 @@ public class ChannelWithRequirementsTestCase {
         File resolvedRequiredChannelFile = Paths.get(resolvedRequiredChannelURL.toURI()).toFile();
         File resolvedArtifactFile = mock(File.class);
 
+        URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
+        File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
+
         when(factory.create())
                 .thenReturn(resolver);
         when(resolver.getAllVersions("org.foo", "required-channel", "yaml", "channel"))
@@ -61,6 +73,8 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(Set.of("1.0.0.Final, 1.1.0.Final", "1.2.0.Final"));
         when(resolver.resolveArtifact("org.example", "foo-bar", null, null, "1.2.0.Final"))
                 .thenReturn(resolvedArtifactFile);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
@@ -96,12 +110,17 @@ public class ChannelWithRequirementsTestCase {
         File resolvedRequiredChannelFile = Paths.get(resolvedRequiredChannelURL.toURI()).toFile();
         File resolvedArtifactFile = mock(File.class);
 
+        URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
+        File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
+
         when(factory.create())
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);
         when(resolver.resolveArtifact("org.example", "foo-bar", null, null, "1.2.0.Final"))
                 .thenReturn(resolvedArtifactFile);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
@@ -133,13 +152,16 @@ public class ChannelWithRequirementsTestCase {
      * Then requiring channel version then MUST be used in resolution.
      */
     @Test
-    public void testRequiringChannelOverridesStreamFromRequiredChannel() throws UnresolvedMavenArtifactException, URISyntaxException {
+    public void testRequiringChannelOverridesStreamFromRequiredChannel() throws UnresolvedMavenArtifactException, URISyntaxException, IOException {
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         URL resolvedRequiredChannelURL = tccl.getResource("channels/required-channel.yaml");
         File resolvedRequiredChannelFile = Paths.get(resolvedRequiredChannelURL.toURI()).toFile();
+
+        URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
+        File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
 
         File resolvedArtifactFile120Final = mock(File.class);
         File resolvedArtifactFile200Final = mock(File.class);
@@ -158,6 +180,8 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(resolvedArtifactFile120Final);
         when(resolver.resolveArtifact("org.example", "foo-bar", null, null, "2.0.0.Final"))
                 .thenReturn(resolvedArtifactFile200Final);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile);
 
         // The requiring channel requires newer version of foo-bar artifact
         List<Channel> channels = ChannelMapper.fromString(
@@ -167,10 +191,23 @@ public class ChannelWithRequirementsTestCase {
                 "  - groupId: org.foo\n" +
                 "    artifactId: required-channel\n" +
                 "    version: 2.0.0.Final\n" +
+                "manifest:\n" +
+                "  gav: org.channels:base-manifest\n" +
                 "streams:\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: foo-bar\n" +
                 "    version: 2.0.0.Final");
+
+        String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+                "name: My manifest\n" +
+                "streams:\n" +
+                "  - groupId: org.example\n" +
+                "    artifactId: foo-bar\n" +
+                "    version: 2.0.0.Final";
+
+
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         assertEquals(1, channels.size());
 
@@ -188,19 +225,15 @@ public class ChannelWithRequirementsTestCase {
 
 
         // The requiring channel requires older version of foo-bar artifact.
-        channels = ChannelMapper.fromString(
-                "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                         "name: My Channel\n" +
-                        "requires:\n" +
-                        "  - groupId: org.foo\n" +
-                        "    artifactId: required-channel\n" +
-                        "    version: 2.0.0.Final\n" +
                         "streams:\n" +
                         "  - groupId: org.example\n" +
                         "    artifactId: foo-bar\n" +
-                        "    version: 1.0.0.Final");
+                        "    version: 1.0.0.Final";
 
-        assertEquals(1, channels.size());
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             MavenArtifact artifact = session.resolveMavenArtifact("org.example", "foo-bar", null, null, "0");
@@ -217,8 +250,7 @@ public class ChannelWithRequirementsTestCase {
 
         // The requiring channel specifies wildcard for version, newest version should be used
         // the newest version is 2.0.0.Final
-        channels = ChannelMapper.fromString(
-                "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                         "name: My Channel\n" +
                         "requires:\n" +
                         "  - groupId: org.foo\n" +
@@ -227,9 +259,10 @@ public class ChannelWithRequirementsTestCase {
                         "streams:\n" +
                         "  - groupId: org.example\n" +
                         "    artifactId: foo-bar\n" +
-                        "    versionPattern: '.*'");
+                        "    versionPattern: '.*'";
 
-        assertEquals(1, channels.size());
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             MavenArtifact artifact = session.resolveMavenArtifact("org.example", "foo-bar", null, null, "0");
@@ -248,7 +281,7 @@ public class ChannelWithRequirementsTestCase {
      * Test that nested requiring channels stream inheritance
      */
     @Test
-    public void testChannelRequirementNesting() throws UnresolvedMavenArtifactException, URISyntaxException {
+    public void testChannelRequirementNesting() throws UnresolvedMavenArtifactException, URISyntaxException, IOException {
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
@@ -258,12 +291,22 @@ public class ChannelWithRequirementsTestCase {
         URL resolved2ndLevelRequiringChannelURL = tccl.getResource("channels/2nd-level-requiring-channel.yaml");
         File resolved2ndLevelRequiringChannelFile = Paths.get(resolved2ndLevelRequiringChannelURL.toURI()).toFile();
 
+        URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
+        File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
+
+        URL resolvedRequiredManifestURL2nd = tccl.getResource("channels/2nd-level-requiring-manifest.yaml");
+        File resolvedRequiredManifestFile2nd = Paths.get(resolvedRequiredManifestURL2nd.toURI()).toFile();
+
         when(factory.create())
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);
         when(resolver.resolveArtifact("org.foo", "2nd-level-requiring-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolved2ndLevelRequiringChannelFile);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-2nd-level-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile2nd);
         // There are:
         // 3 version of foo-bar
         // 2 versions of im-only-in-required-channel
@@ -338,6 +381,10 @@ public class ChannelWithRequirementsTestCase {
                 "  - groupId: org.foo\n" +
                 "    artifactId: 2nd-level-requiring-channel\n" +
                 "    version: 2.0.0.Final\n" +
+                "manifest:\n" +
+                "  gav: org.channels:base-manifest\n");
+        String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+                "name: root level requiring manifest\n" +
                 "streams:\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: im-only-in-required-channel\n" +
@@ -347,7 +394,10 @@ public class ChannelWithRequirementsTestCase {
                 "    version: 2.0.0.Final\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: im-only-in-second-level\n" +
-                "    version: 2.0.0.Final");
+                "    version: 2.0.0.Final";
+
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             // foo-bar should get version from layer 2
@@ -398,6 +448,12 @@ public class ChannelWithRequirementsTestCase {
         URL resolvedRequiredChannel2URL = tccl.getResource("channels/required-channel-2.yaml");
         File resolvedRequiredChannel2File = Paths.get(resolvedRequiredChannel2URL.toURI()).toFile();
 
+        URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
+        File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
+
+        URL resolvedRequiredManifestURL2 = tccl.getResource("channels/required-manifest-2.yaml");
+        File resolvedRequiredManifestFile2 = Paths.get(resolvedRequiredManifestURL2.toURI()).toFile();
+
         when(factory.create())
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
@@ -420,6 +476,11 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(mock(File.class));
         when(resolver.resolveArtifact("org.example", "im-only-in-required-channel", null, null, "2.0.0.Final"))
                 .thenReturn(mock(File.class));
+
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile);
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest-2"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+                .thenReturn(resolvedRequiredManifestFile2);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring channel\n" +

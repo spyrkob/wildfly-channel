@@ -7,8 +7,6 @@ vendor:
   name: My Vendor
   support: community
 foo: not an known property
-streams:
-  - groupId: org.wildfly
-    artifactId: wildfly-ee-galleon-pack
-    version: 26.0.0.Final
-    bar: not a known property
+manifest:
+  gav: test.channels:channel
+  bar: not a known property

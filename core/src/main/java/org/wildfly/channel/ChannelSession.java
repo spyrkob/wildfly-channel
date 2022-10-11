@@ -201,7 +201,7 @@ public class ChannelSession implements AutoCloseable {
      *
      * @return a synthetic Channel.
      */
-    public Channel getRecordedChannel() {
+    public Manifest getRecordedChannel() {
         return recorder.getRecordedChannel();
     }
 

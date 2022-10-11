@@ -4,10 +4,5 @@ requires:
   - groupId: org.foo
     artifactId: required-channel
     version: 2.0.0.Final
-streams:
-  - groupId: org.example
-    artifactId: foo-bar
-    version: 1.0.0.Final
-  - groupId: org.example
-    artifactId: im-only-in-second-level
-    version: 1.0.0.Final
+manifest:
+  gav: test.channels:required-2nd-level-manifest

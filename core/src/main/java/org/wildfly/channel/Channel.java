@@ -23,19 +23,18 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -84,29 +83,58 @@ public class Channel implements AutoCloseable {
      */
     private List<Channel> requiredChannels = Collections.emptyList();
 
-    /**
-     * Streams of components that are provided by this channel.
-     */
-    private Set<Stream> streams;
+    private Manifest manifest;
+
+    private ManifestRef manifestRef;
 
     private MavenVersionsResolver resolver;
+
+    @JsonIgnore
+    public Manifest getManifest() {
+        return manifest;
+    }
+
+    static class ManifestRef {
+        final String url;
+        final String gav;
+
+        @JsonCreator
+        public ManifestRef(@JsonProperty(value = "url") String url, @JsonProperty(value = "gav") String gav) {
+            this.url = url;
+            this.gav = gav;
+        }
+    }
 
     /**
      * Representation of a Channel resource using the current schema version.
      *
-     * @see #Channel(String, String, Vendor, List, Collection)
+     * @see #Channel(String, String, Vendor, List, ManifestRef)
      */
     public Channel(String name,
                    String description,
                    Vendor vendor,
                    List<ChannelRequirement> channelRequirements,
-                   Collection<Stream> streams) {
+                   ManifestRef manifestRef) {
         this(ChannelMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
                 vendor,
                 channelRequirements,
-                streams);
+                manifestRef);
+    }
+
+    Channel(String name,
+                   String description,
+                   Vendor vendor,
+                   List<ChannelRequirement> channelRequirements,
+                   Manifest manifest) {
+        this(ChannelMapper.CURRENT_SCHEMA_VERSION,
+                name,
+                description,
+                vendor,
+                channelRequirements,
+                null);
+        this.manifest = manifest;
     }
 
     /**
@@ -117,7 +145,6 @@ public class Channel implements AutoCloseable {
      * @param description the description of the channel - can be {@code null}
      * @param vendor the vendor of the channel - can be {@code null}
      * @param channelRequirements the required channels - cane be {@code null}
-     * @param streams the streams defined by the channel - can be {@code null}
      */
     @JsonCreator
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "vendor", "requires", "streams" })
@@ -127,16 +154,13 @@ public class Channel implements AutoCloseable {
                    @JsonProperty(value = "vendor") Vendor vendor,
                    @JsonProperty(value = "requires")
                    @JsonInclude(NON_EMPTY) List<ChannelRequirement> channelRequirements,
-                   @JsonProperty(value = "streams") Collection<Stream> streams) {
+                   @JsonProperty(value = "manifest") ManifestRef manifestRef) {
         this.schemaVersion = schemaVersion;
         this.name = name;
         this.description = description;
         this.vendor = vendor;
         this.channelRequirements = (channelRequirements != null) ? channelRequirements : emptyList();
-        this.streams = new TreeSet<>();
-        if (streams != null) {
-            this.streams.addAll(streams);
-        }
+        this.manifestRef = manifestRef;
     }
 
     @JsonInclude
@@ -165,18 +189,25 @@ public class Channel implements AutoCloseable {
         return channelRequirements;
     }
 
-    @JsonInclude(NON_EMPTY)
-    public Collection<Stream> getStreams() {
-        return streams;
-    }
-
-    void addStream(Stream stream) {
-        Objects.requireNonNull(stream);
-        this.streams.add(stream);
-    }
-
     void init(MavenVersionsResolver.Factory factory) {
         resolver = factory.create();
+
+        // TODO: test this
+        // TODO: port proper resolution from VRF
+        if (manifestRef != null) {
+            try {
+                final String[] splitGav = manifestRef.gav.split(":");
+                final File channelArtifact = resolver.resolveArtifact(splitGav[0], splitGav[1], Manifest.EXTENSION, Manifest.CLASSIFIER, null);
+                final URL manifestURL = channelArtifact.toURI().toURL();
+                manifest = ManifestMapper.from(manifestURL);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            manifest.init(resolver);
+        } else {
+            manifest = new Manifest(null, null, Collections.emptyList());
+        }
+
 
         if (!channelRequirements.isEmpty()) {
             requiredChannels = new ArrayList<>();
@@ -229,7 +260,7 @@ public class Channel implements AutoCloseable {
         requireNonNull(resolver);
 
         // first we find if there is a stream for that given (groupId, artifactId).
-        Optional<Stream> foundStream = findStreamFor(groupId, artifactId);
+        Optional<Stream> foundStream = manifest.findStreamFor(groupId, artifactId);
 
         // no stream for this artifact, let's look into the required channel
         if (!foundStream.isPresent()) {
@@ -299,25 +330,15 @@ public class Channel implements AutoCloseable {
         return resolvedArtifacts.stream().map(f->new ResolveArtifactResult(f, this)).collect(Collectors.toList());
     }
 
-    public Optional<Stream> findStreamFor(String groupId, String artifactId) {
-        // first exact match:
-        Optional<Stream> stream = streams.stream().filter(s -> s.getGroupId().equals(groupId) && s.getArtifactId().equals(artifactId)).findFirst();
-        if (stream.isPresent()) {
-            return stream;
-        }
-        // check if there is a stream for groupId:*
-        stream = streams.stream().filter(s -> s.getGroupId().equals(groupId) && s.getArtifactId().equals("*")).findFirst();
-        return stream;
-    }
-
     @Override
     public String toString() {
         return "Channel{" +
+                "schemaVersion='" + schemaVersion + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", vendor=" + vendor +
                 ", channelRequirements=" + channelRequirements +
-                ", streams=" + streams +
+                ", manifestRef=" + manifestRef +
                 '}';
     }
 }
