@@ -32,7 +32,11 @@ public class ChannelMapperTestCase {
 
     @Test
     public void testWriteReadChannel() throws Exception {
-        final Channel channel = new Channel("test_name", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY), Collections.emptyList(), Collections.emptyList(), new Channel.ManifestRef(null, "test.channels:channel"));
+        final Channel channel = new Channel("test_name", "test_desc",
+                new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
+                Collections.emptyList(),
+                List.of(new Repository("test", "https://test.org/repository")),
+                new Channel.ManifestRef(null, "test.channels:channel"));
         final String yaml = ChannelMapper.toYaml(channel);
 
         final Channel channel1 = ChannelMapper.fromString(yaml).get(0);
@@ -42,8 +46,14 @@ public class ChannelMapperTestCase {
     @Test
     public void testWriteMultipleChannels() throws Exception {
         final ChannelRequirement req = new ChannelRequirement("org", "foo", "1.2.3");
-        final Channel channel1 = new Channel("test_name_1", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY), Arrays.asList(req), Collections.emptyList(), new Channel.ManifestRef(null, "test.channels:channel"));
-        final Channel channel2 = new Channel("test_name_2", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY), Collections.emptyList(), Collections.emptyList(), new Channel.ManifestRef("http://test.channels/channels", null));
+        final Channel channel1 = new Channel("test_name_1", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
+                List.of(req),
+                List.of(new Repository("test", "https://test.org/repository")),
+                new Channel.ManifestRef(null, "test.channels:channel"));
+        final Channel channel2 = new Channel("test_name_2", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
+                Collections.emptyList(),
+                List.of(new Repository("test", "https://test.org/repository")),
+                new Channel.ManifestRef("http://test.channels/channels", null));
         final String yaml = ChannelMapper.toYaml(channel1, channel2);
 
         System.out.println(yaml);

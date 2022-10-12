@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class ManifestMapper {
     public static final String SCHEMA_VERSION_1_0_0 = "1.0.0";
     public static final String CURRENT_SCHEMA_VERSION = SCHEMA_VERSION_1_0_0;
 
-//    private static final String SCHEMA_1_0_0_FILE = "org/wildfly/manifest/v1.0.0/schema.json";
+    private static final String SCHEMA_1_0_0_FILE = "org/wildfly/manifest/v1.0.0/schema.json";
     private static final YAMLFactory YAML_FACTORY = new YAMLFactory()
             .configure(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR, true);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(YAML_FACTORY)
@@ -63,7 +62,7 @@ public class ManifestMapper {
     private static final Map<String, JsonSchema> SCHEMAS = new HashMap<>();
 
     static {
-//        SCHEMAS.put(SCHEMA_VERSION_1_0_0, SCHEMA_FACTORY.getSchema(ManifestMapper.class.getClassLoader().getResourceAsStream(SCHEMA_1_0_0_FILE)));
+        SCHEMAS.put(SCHEMA_VERSION_1_0_0, SCHEMA_FACTORY.getSchema(ManifestMapper.class.getClassLoader().getResourceAsStream(SCHEMA_1_0_0_FILE)));
     }
 
     private static JsonSchema getSchema(JsonNode node) {
@@ -95,10 +94,10 @@ public class ManifestMapper {
                 manifestURL = manifestURL.toURI().resolve("channel.yaml").toURL();
             }
 
-//            List<String> messages = validate(manifestURL);
-//            if (!messages.isEmpty()) {
-//                throw new InvalidChannelException("Invalid manifest", messages);
-//            }
+            List<String> messages = validate(manifestURL);
+            if (!messages.isEmpty()) {
+                throw new InvalidChannelException("Invalid manifest", messages);
+            }
             Manifest manifest = OBJECT_MAPPER.readValue(manifestURL, Manifest.class);
             return manifest;
         } catch (IOException | URISyntaxException e) {
@@ -110,10 +109,10 @@ public class ManifestMapper {
         requireNonNull(yamlContent);
 
         try {
-//            List<String> messages = validateString(yamlContent);
-//            if (!messages.isEmpty()) {
-//                throw new InvalidChannelException("Invalid manifest", messages);
-//            }
+            List<String> messages = validateString(yamlContent);
+            if (!messages.isEmpty()) {
+                throw new InvalidChannelException("Invalid manifest", messages);
+            }
 
             YAMLParser parser = YAML_FACTORY.createParser(yamlContent);
             Manifest manifest = OBJECT_MAPPER.readValue(parser, Manifest.class);

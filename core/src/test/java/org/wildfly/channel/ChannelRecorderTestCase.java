@@ -26,7 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.File;
 import java.io.IOException;

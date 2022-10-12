@@ -104,6 +104,18 @@ public class Channel implements AutoCloseable {
             this.url = url;
             this.gav = gav;
         }
+
+        @JsonProperty(value = "gav")
+        @JsonInclude(NON_NULL)
+        public String getGav() {
+            return gav;
+        }
+
+        @JsonProperty(value = "url")
+        @JsonInclude(NON_NULL)
+        public String getUrl() {
+            return url;
+        }
     }
 
     /**
@@ -197,8 +209,14 @@ public class Channel implements AutoCloseable {
     }
 
     @JsonInclude(NON_EMPTY)
+    @JsonProperty(value = "repositories")
     public List<Repository> getRepositories() {
         return repositories;
+    }
+
+    @JsonProperty(value = "manifest")
+    public ManifestRef getManifestRef() {
+        return manifestRef;
     }
 
     void init(MavenVersionsResolver.Factory factory) {

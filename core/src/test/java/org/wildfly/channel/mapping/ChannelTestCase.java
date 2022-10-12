@@ -18,8 +18,7 @@ package org.wildfly.channel.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelMapper;
 import org.wildfly.channel.ChannelRequirement;
-import org.wildfly.channel.Stream;
 import org.wildfly.channel.Vendor;
 
 public class ChannelTestCase {

@@ -31,7 +31,7 @@ import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
 
 public class ManifestTestCase {
 
