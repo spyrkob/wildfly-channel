@@ -95,29 +95,6 @@ public class Channel implements AutoCloseable {
         return manifest;
     }
 
-    static class ManifestRef {
-        final String url;
-        final String gav;
-
-        @JsonCreator
-        public ManifestRef(@JsonProperty(value = "url") String url, @JsonProperty(value = "gav") String gav) {
-            this.url = url;
-            this.gav = gav;
-        }
-
-        @JsonProperty(value = "gav")
-        @JsonInclude(NON_NULL)
-        public String getGav() {
-            return gav;
-        }
-
-        @JsonProperty(value = "url")
-        @JsonInclude(NON_NULL)
-        public String getUrl() {
-            return url;
-        }
-    }
-
     /**
      * Representation of a Channel resource using the current schema version.
      *
@@ -208,7 +185,6 @@ public class Channel implements AutoCloseable {
         return channelRequirements;
     }
 
-    @JsonInclude(NON_EMPTY)
     @JsonProperty(value = "repositories")
     public List<Repository> getRepositories() {
         return repositories;
@@ -222,18 +198,13 @@ public class Channel implements AutoCloseable {
     void init(MavenVersionsResolver.Factory factory) {
         resolver = factory.create(repositories);
 
-        // TODO: test this
-        // TODO: port proper resolution from VRF
         if (manifestRef != null) {
             try {
-                final String[] splitGav = manifestRef.gav.split(":");
-                final File channelArtifact = resolver.resolveArtifact(splitGav[0], splitGav[1], Manifest.EXTENSION, Manifest.CLASSIFIER, null);
-                final URL manifestURL = channelArtifact.toURI().toURL();
-                manifest = ManifestMapper.from(manifestURL);
+                manifest = resolveManifest(manifestRef);
+                manifest.init(resolver);
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
-            manifest.init(resolver);
         } else {
             manifest = new Manifest(null, null, Collections.emptyList());
         }
@@ -281,6 +252,23 @@ public class Channel implements AutoCloseable {
             this.version = version;
             this.channel = channel;
         }
+    }
+
+    private Manifest resolveManifest(ManifestRef manifestRef) throws UnresolvedMavenArtifactException, MalformedURLException {
+        if (manifestRef.getUrl() != null) {
+            return ManifestMapper.from(new URL(manifestRef.getUrl()));
+        }
+
+        String version = manifestRef.getVersion();
+        if (version == null) {
+            Set<String> versions = resolver.getAllVersions(manifestRef.getGroupId(), manifestRef.getArtifactId(), Manifest.EXTENSION, Manifest.CLASSIFIER);
+            Optional<String> latestVersion = VersionMatcher.getLatestVersion(versions);
+            version = latestVersion.orElseThrow(() -> {
+                throw new UnresolvedMavenArtifactException(String.format("Unable to resolve the latest version of manifest %s:%s", manifestRef.getGroupId(), manifestRef.getArtifactId()));
+            });
+        }
+        File channelArtifact = resolver.resolveArtifact(manifestRef.getGroupId(), manifestRef.getArtifactId(), Manifest.EXTENSION, Manifest.CLASSIFIER, version);
+        return ManifestMapper.from(channelArtifact.toURI().toURL());
     }
 
     Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier) {

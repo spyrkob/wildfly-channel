@@ -5,7 +5,7 @@ requires:
     artifactId: required-channel
     version: 2.0.0.Final
 manifest:
-  gav: test.channels:required-2nd-level-manifest
+  gav: test.channels:required-2nd-level-manifest:1.0.0
 repositories:
   - id: test
     url: test-repository

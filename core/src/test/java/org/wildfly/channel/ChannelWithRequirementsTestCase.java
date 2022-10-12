@@ -73,7 +73,7 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(Set.of("1.0.0.Final, 1.1.0.Final", "1.2.0.Final"));
         when(resolver.resolveArtifact("org.example", "foo-bar", null, null, "1.2.0.Final"))
                 .thenReturn(resolvedArtifactFile);
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
@@ -119,7 +119,7 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(resolvedRequiredChannelFile);
         when(resolver.resolveArtifact("org.example", "foo-bar", null, null, "1.2.0.Final"))
                 .thenReturn(resolvedArtifactFile);
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
@@ -192,7 +192,7 @@ public class ChannelWithRequirementsTestCase {
                 "    artifactId: required-channel\n" +
                 "    version: 2.0.0.Final\n" +
                 "manifest:\n" +
-                "  gav: org.channels:base-manifest\n" +
+                "  gav: org.channels:base-manifest:1.0.0\n" +
                 "streams:\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: foo-bar\n" +
@@ -206,7 +206,7 @@ public class ChannelWithRequirementsTestCase {
                 "    version: 2.0.0.Final";
 
 
-        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         assertEquals(1, channels.size());
@@ -303,9 +303,9 @@ public class ChannelWithRequirementsTestCase {
                 .thenReturn(resolvedRequiredChannelFile);
         when(resolver.resolveArtifact("org.foo", "2nd-level-requiring-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolved2ndLevelRequiringChannelFile);
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-2nd-level-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-2nd-level-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile2nd);
         // There are:
         // 3 version of foo-bar
@@ -382,7 +382,7 @@ public class ChannelWithRequirementsTestCase {
                 "    artifactId: 2nd-level-requiring-channel\n" +
                 "    version: 2.0.0.Final\n" +
                 "manifest:\n" +
-                "  gav: org.channels:base-manifest\n");
+                "  gav: org.channels:base-manifest:1.0.0\n");
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring manifest\n" +
                 "streams:\n" +
@@ -396,7 +396,7 @@ public class ChannelWithRequirementsTestCase {
                 "    artifactId: im-only-in-second-level\n" +
                 "    version: 2.0.0.Final";
 
-        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("org.channels"), eq("base-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(Files.writeString(tempDir.resolve("manifest.yaml"), manifest).toFile());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
@@ -477,9 +477,9 @@ public class ChannelWithRequirementsTestCase {
         when(resolver.resolveArtifact("org.example", "im-only-in-required-channel", null, null, "2.0.0.Final"))
                 .thenReturn(mock(File.class));
 
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
-        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest-2"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
+        when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest-2"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile2);
 
         List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +

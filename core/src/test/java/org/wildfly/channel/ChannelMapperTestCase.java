@@ -18,13 +18,10 @@ package org.wildfly.channel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.wildfly.channel.ChannelMapper.CURRENT_SCHEMA_VERSION;
 
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +33,7 @@ public class ChannelMapperTestCase {
                 new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 Collections.emptyList(),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new Channel.ManifestRef(null, "test.channels:channel"));
+                new ManifestRef(null, "test.channels:channel"));
         final String yaml = ChannelMapper.toYaml(channel);
 
         final Channel channel1 = ChannelMapper.fromString(yaml).get(0);
@@ -49,11 +46,11 @@ public class ChannelMapperTestCase {
         final Channel channel1 = new Channel("test_name_1", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 List.of(req),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new Channel.ManifestRef(null, "test.channels:channel"));
+                new ManifestRef(null, "test.channels:channel"));
         final Channel channel2 = new Channel("test_name_2", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 Collections.emptyList(),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new Channel.ManifestRef("http://test.channels/channels", null));
+                new ManifestRef("http://test.channels/channels", null));
         final String yaml = ChannelMapper.toYaml(channel1, channel2);
 
         System.out.println(yaml);
