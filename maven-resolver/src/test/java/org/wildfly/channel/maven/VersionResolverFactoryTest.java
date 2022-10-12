@@ -69,8 +69,8 @@ public class VersionResolverFactoryTest {
         versionRangeResult.setVersions(asList(v100, v110, v111));
         when(system.resolveVersionRange(eq(session), any(VersionRangeRequest.class))).thenReturn(versionRangeResult);
 
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, Collections.emptyList());
-        MavenVersionsResolver resolver = factory.create();
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
 
         Set<String> allVersions = resolver.getAllVersions("org.foo", "bar", null, null);
         assertEquals(3, allVersions.size());
@@ -92,8 +92,8 @@ public class VersionResolverFactoryTest {
         when (artifact.getFile()).thenReturn(artifactFile);
         when(system.resolveArtifact(eq(session), any(ArtifactRequest.class))).thenReturn(artifactResult);
 
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, Collections.emptyList());
-        MavenVersionsResolver resolver = factory.create();
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
 
         File resolvedArtifact = resolver.resolveArtifact("org.foo", "bar", null, null, "1.0.0");
         assertEquals(artifactFile, resolvedArtifact);
@@ -106,8 +106,8 @@ public class VersionResolverFactoryTest {
         RepositorySystemSession session = mock(RepositorySystemSession.class);
         when(system.resolveArtifact(eq(session), any(ArtifactRequest.class))).thenThrow(ArtifactResolutionException.class);
 
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, Collections.emptyList());
-        MavenVersionsResolver resolver = factory.create();
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
 
         Assertions.assertThrows(UnresolvedMavenArtifactException.class, () -> {
                     resolver.resolveArtifact("org.foo", "does-not-exist", null, null, "1.0.0");
@@ -130,11 +130,11 @@ public class VersionResolverFactoryTest {
         artifactResult.setArtifact(channelArtifact);
         when(system.resolveArtifact(eq(session), any(ArtifactRequest.class))).thenReturn(artifactResult);
 
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, Collections.emptyList());
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
         ChannelCoordinate channelCoord1 = new ChannelCoordinate("org.wildfly", "wildfly-galleon-pack", "27.0.0.Final");
         List<ChannelCoordinate> channelCoords = Arrays.asList(channelCoord1);
 
-        List<Channel> channels = factory.resolveChannels(channelCoords);
+        List<Channel> channels = factory.resolveChannels(channelCoords, Collections.emptyList());
         assertEquals(1, channels.size());
         Channel channel = channels.get(0);
 
@@ -160,8 +160,8 @@ public class VersionResolverFactoryTest {
 
         when(system.resolveArtifacts(eq(session), any(List.class))).thenReturn(Arrays.asList(artifactResult1, artifactResult2));
 
-        VersionResolverFactory factory = new VersionResolverFactory(system, session, Collections.emptyList());
-        MavenVersionsResolver resolver = factory.create();
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
 
         final List<ArtifactCoordinate> coordinates = asList(
            new ArtifactCoordinate("org.foo", "bar", null, null, "1.0.0"),

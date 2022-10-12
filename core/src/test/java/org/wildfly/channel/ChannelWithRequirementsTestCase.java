@@ -61,7 +61,7 @@ public class ChannelWithRequirementsTestCase {
         URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
         File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.getAllVersions("org.foo", "required-channel", "yaml", "channel"))
                 .thenReturn(Set.of("1", "2", "3"));
@@ -113,7 +113,7 @@ public class ChannelWithRequirementsTestCase {
         URL resolvedRequiredManifestURL = tccl.getResource("channels/required-manifest.yaml");
         File resolvedRequiredManifestFile = Paths.get(resolvedRequiredManifestURL.toURI()).toFile();
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);
@@ -167,7 +167,7 @@ public class ChannelWithRequirementsTestCase {
         File resolvedArtifactFile200Final = mock(File.class);
         File resolvedArtifactFile100Final = mock(File.class);
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);
@@ -297,7 +297,7 @@ public class ChannelWithRequirementsTestCase {
         URL resolvedRequiredManifestURL2nd = tccl.getResource("channels/2nd-level-requiring-manifest.yaml");
         File resolvedRequiredManifestFile2nd = Paths.get(resolvedRequiredManifestURL2nd.toURI()).toFile();
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);
@@ -454,7 +454,7 @@ public class ChannelWithRequirementsTestCase {
         URL resolvedRequiredManifestURL2 = tccl.getResource("channels/required-manifest-2.yaml");
         File resolvedRequiredManifestFile2 = Paths.get(resolvedRequiredManifestURL2.toURI()).toFile();
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "2.0.0.Final"))
                 .thenReturn(resolvedRequiredChannelFile);

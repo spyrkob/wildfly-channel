@@ -23,7 +23,9 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import org.eclipse.aether.version.Version;
 import org.wildfly.channel.ArtifactCoordinate;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelMapper;
+import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.spi.MavenVersionsResolver;
 import org.wildfly.channel.version.VersionMatcher;
@@ -54,20 +57,25 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
 
     private final RepositorySystem system;
     private final RepositorySystemSession session;
-    private final List<RemoteRepository> repositories;
 
     public VersionResolverFactory(RepositorySystem system,
-                                  RepositorySystemSession session,
-                                  List<RemoteRepository> repositories) {
+                                  RepositorySystemSession session) {
         this.system = system;
         this.session = session;
-        this.repositories = repositories;
     }
 
     @Override
-    public MavenVersionsResolver create() {
-        MavenVersionsResolver res = new MavenResolverImpl(system, session, repositories);
-        return res;
+    public MavenVersionsResolver create(Collection<Repository> repositories) {
+        Objects.requireNonNull(repositories);
+
+        final List<RemoteRepository> mvnRepositories = repositories.stream()
+                .map(r -> new RemoteRepository.Builder(r.getId(), "default", r.getUrl()).build())
+                .collect(Collectors.toList());
+        return create(mvnRepositories);
+    }
+
+    private MavenResolverImpl create(List<RemoteRepository> mvnRepositories) {
+        return new MavenResolverImpl(system, session, mvnRepositories);
     }
 
     private class MavenResolverImpl implements MavenVersionsResolver {
@@ -174,11 +182,11 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
      * @throws UnresolvedMavenArtifactException if the channels can not be resolved
      * @throws MalformedURLException if the channel's rul is not properly formed
      */
-    public List<Channel> resolveChannels(List<ChannelCoordinate> channelCoords) throws UnresolvedMavenArtifactException, MalformedURLException {
+    public List<Channel> resolveChannels(List<ChannelCoordinate> channelCoords, List<RemoteRepository> repositories) throws UnresolvedMavenArtifactException, MalformedURLException {
         requireNonNull(channelCoords);
 
         List<Channel> channels = new ArrayList<>();
-        try (MavenVersionsResolver resolver = create()) {
+        try (MavenVersionsResolver resolver = create(repositories)) {
 
             for (ChannelCoordinate channelCoord : channelCoords) {
                 if (channelCoord.getUrl() != null) {

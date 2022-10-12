@@ -71,6 +71,7 @@ public class Channel implements AutoCloseable {
      * This is an optional field.
      */
     private final Vendor vendor;
+    private final List<Repository> repositories;
 
     /**
      * Other channels that are required by the channel.
@@ -108,18 +109,20 @@ public class Channel implements AutoCloseable {
     /**
      * Representation of a Channel resource using the current schema version.
      *
-     * @see #Channel(String, String, Vendor, List, ManifestRef)
+     * @see #Channel(String, String, Vendor, List, List, ManifestRef)
      */
     public Channel(String name,
                    String description,
                    Vendor vendor,
                    List<ChannelRequirement> channelRequirements,
+                   List<Repository> repositories,
                    ManifestRef manifestRef) {
         this(ChannelMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
                 vendor,
                 channelRequirements,
+                repositories,
                 manifestRef);
     }
 
@@ -133,6 +136,7 @@ public class Channel implements AutoCloseable {
                 description,
                 vendor,
                 channelRequirements,
+                emptyList(),
                 null);
         this.manifest = manifest;
     }
@@ -154,12 +158,15 @@ public class Channel implements AutoCloseable {
                    @JsonProperty(value = "vendor") Vendor vendor,
                    @JsonProperty(value = "requires")
                    @JsonInclude(NON_EMPTY) List<ChannelRequirement> channelRequirements,
+                   @JsonProperty(value = "repositories")
+                   @JsonInclude(NON_EMPTY) List<Repository> repositories,
                    @JsonProperty(value = "manifest") ManifestRef manifestRef) {
         this.schemaVersion = schemaVersion;
         this.name = name;
         this.description = description;
         this.vendor = vendor;
         this.channelRequirements = (channelRequirements != null) ? channelRequirements : emptyList();
+        this.repositories = (repositories != null) ? repositories : emptyList();
         this.manifestRef = manifestRef;
     }
 
@@ -189,8 +196,13 @@ public class Channel implements AutoCloseable {
         return channelRequirements;
     }
 
+    @JsonInclude(NON_EMPTY)
+    public List<Repository> getRepositories() {
+        return repositories;
+    }
+
     void init(MavenVersionsResolver.Factory factory) {
-        resolver = factory.create();
+        resolver = factory.create(repositories);
 
         // TODO: test this
         // TODO: port proper resolution from VRF
@@ -253,7 +265,6 @@ public class Channel implements AutoCloseable {
         }
     }
 
-
     Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier) {
         requireNonNull(groupId);
         requireNonNull(artifactId);
@@ -296,6 +307,32 @@ public class Channel implements AutoCloseable {
         return Optional.empty();
     }
 
+    MavenArtifact resolveDirectMavenArtifact(String groupId, String artifactId, String extension, String classifier, String version) throws UnresolvedMavenArtifactException {
+        requireNonNull(groupId);
+        requireNonNull(artifactId);
+        requireNonNull(version);
+
+        File file = resolver.resolveArtifact(groupId, artifactId, extension, classifier, version);
+        return new MavenArtifact(groupId, artifactId, extension, classifier, version, file);
+    }
+
+    List<MavenArtifact> resolveDirectMavenArtifacts(List<ArtifactCoordinate> coordinates) throws UnresolvedMavenArtifactException {
+        coordinates.stream().forEach(c->{
+            requireNonNull(c.getGroupId());
+            requireNonNull(c.getArtifactId());
+            requireNonNull(c.getVersion());
+        });
+        final List<File> files = resolver.resolveArtifacts(coordinates);
+
+        final ArrayList<MavenArtifact> res = new ArrayList<>();
+        for (int i = 0; i < coordinates.size(); i++) {
+            final ArtifactCoordinate request = coordinates.get(i);
+            final MavenArtifact resolvedArtifact = new MavenArtifact(request.getGroupId(), request.getArtifactId(), request.getExtension(), request.getClassifier(), request.getVersion(), files.get(i));
+
+            res.add(resolvedArtifact);
+        }
+        return res;
+    }
 
     static class ResolveArtifactResult {
         File file;

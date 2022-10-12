@@ -17,6 +17,7 @@
 package org.wildfly.channel;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -67,7 +68,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(singleton("25.0.0.Final"));
 
         final List<Channel> channels = mockChannel(resolver, tempDir, manifest);
@@ -83,7 +84,7 @@ public class ChannelSessionTestCase {
     public static List<Channel> mockChannel(MavenVersionsResolver resolver, Path tempDir, String... manifests) throws IOException {
         List<Channel> channels = new ArrayList<>();
         for (int i = 0; i < manifests.length; i++) {
-            channels.add(new Channel(null, null, null, null, new Channel.ManifestRef(null, "org.channels:channel"+i)));
+            channels.add(new Channel(null, null, null, null, emptyList(), new Channel.ManifestRef(null, "org.channels:channel"+i)));
             String manifest = manifests[i];
             Path manifestFile = Files.writeString(tempDir.resolve("manifest" + i +".yaml"), manifest);
             when(resolver.resolveArtifact(eq("org.channels"), eq("channel" + i), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), any()))
@@ -103,7 +104,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(singleton("26.0.0.Final"));
 
         final List<Channel> channels = mockChannel(resolver, tempDir, manifest);
@@ -132,7 +133,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
         File resolvedArtifactFile = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(Set.of("25.0.0.Final", "25.0.1.Final"));
         when(resolver.resolveArtifact("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.1.Final")).thenReturn(resolvedArtifactFile);
 
@@ -166,7 +167,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(singleton("26.0.0.Final"));
 
         final List<Channel> channels = mockChannel(resolver, tempDir, manifest);
@@ -195,7 +196,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
         File resolvedArtifactFile = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.resolveArtifact("org.bar", "bar", null, null, "1.0.0.Final")).thenReturn(resolvedArtifactFile);
 
         final List<Channel> channels = mockChannel(resolver, tempDir, manifest);
@@ -237,7 +238,7 @@ public class ChannelSessionTestCase {
         File resolvedArtifactFile1 = mock(File.class);
         File resolvedArtifactFile2 = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         final List<ArtifactCoordinate> coordinates = asList(
            new ArtifactCoordinate("org.foo", "foo", null, null, "1.0.0"),
            new ArtifactCoordinate("org.bar", "bar", null, null, "1.0.0"));
@@ -286,7 +287,7 @@ public class ChannelSessionTestCase {
         File resolvedArtifactFile1 = mock(File.class);
         File resolvedArtifactFile2 = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         final List<ArtifactCoordinate> coordinates = asList(
            new ArtifactCoordinate("org.foo", "foo", null, null, "1.0.0"),
            new ArtifactCoordinate("org.bar", "bar", null, null, "1.0.0"));
@@ -343,7 +344,7 @@ public class ChannelSessionTestCase {
         File resolvedArtifactFile1 = mock(File.class);
         File resolvedArtifactFile2 = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         final List<ArtifactCoordinate> coordinates = asList(
            new ArtifactCoordinate("org.foo", "foo", null, null, "25.0.0.Final"),
            new ArtifactCoordinate("org.bar", "bar", null, null, "26.0.0.Final"));
@@ -391,7 +392,7 @@ public class ChannelSessionTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
         File resolvedArtifactFile = mock(File.class);
 
-        when(factory.create()).thenReturn(resolver);
+        when(factory.create(any())).thenReturn(resolver);
         when(resolver.resolveArtifact(eq("org.foo"), eq("foo"), eq(null), eq(null), anyString())).thenReturn(resolvedArtifactFile);
 
         final List<Channel> channels = mockChannel(resolver, tempDir, manifest1, manifest2);

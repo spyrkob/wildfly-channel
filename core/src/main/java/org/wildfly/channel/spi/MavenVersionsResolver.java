@@ -18,10 +18,12 @@ package org.wildfly.channel.spi;
 
 import java.io.Closeable;
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.wildfly.channel.ArtifactCoordinate;
+import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 
 /**
@@ -79,11 +81,11 @@ public interface MavenVersionsResolver extends Closeable {
     *
     * A client of this library is responsible to provide an implementation of the {@link Factory} interface.
     *
-    * The {@link #create()} method will be called once for every channel.
+    * The {@link #create(Collection)}} method will be called once for every channel.
     */
    interface Factory extends Closeable {
 
-      MavenVersionsResolver create();
+      MavenVersionsResolver create(Collection<Repository> repositories);
 
       default void close() {
       }

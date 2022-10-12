@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.wildfly.channel.spi.MavenVersionsResolver;
@@ -72,7 +72,7 @@ public class ChannelRecorderTestCase {
 
         final List<Channel> channels = ChannelSessionTestCase.mockChannel(resolver, tempDir, manifest1, manifest2);
 
-        when(factory.create())
+        when(factory.create(any()))
                 .thenReturn(resolver);
         when(resolver.getAllVersions(eq("org.wildfly"), anyString(), eq(null), eq(null)))
                 .thenReturn(singleton("24.0.0.Final"));
