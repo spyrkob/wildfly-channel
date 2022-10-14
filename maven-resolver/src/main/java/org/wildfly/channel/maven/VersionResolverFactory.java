@@ -35,6 +35,7 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.repository.RepositoryPolicy;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -55,6 +56,8 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
 
     private static final Logger LOG = Logger.getLogger(VersionResolverFactory.class);
 
+    public static final RepositoryPolicy DEFAULT_REPOSITORY_POLICY = new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
+
     private final RepositorySystem system;
     private final RepositorySystemSession session;
 
@@ -69,7 +72,9 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
         Objects.requireNonNull(repositories);
 
         final List<RemoteRepository> mvnRepositories = repositories.stream()
-                .map(r -> new RemoteRepository.Builder(r.getId(), "default", r.getUrl()).build())
+                .map(r -> new RemoteRepository.Builder(r.getId(), "default", r.getUrl())
+                        .setPolicy(DEFAULT_REPOSITORY_POLICY)
+                        .build())
                 .collect(Collectors.toList());
         return create(mvnRepositories);
     }
