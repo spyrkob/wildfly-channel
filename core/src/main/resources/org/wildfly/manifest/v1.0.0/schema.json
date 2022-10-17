@@ -34,7 +34,11 @@
           },
           "version" : {
             "description": "Version of the stream. This must be either a single version. Only one of version, versionPattern must be set.",
-            "type": "string"
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
           },
           "versionPattern" : {
             "description": "VersionPattern of the stream. This is a regular expression that matches any version from this stream. Only one of version, versionPattern must be set.",

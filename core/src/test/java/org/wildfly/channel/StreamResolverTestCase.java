@@ -34,13 +34,13 @@ public class StreamResolverTestCase {
                 "streams:\n" +
                 "  - groupId: io.undertow\n" +
                 "    artifactId: '*'\n" +
-                "    version: 3.0.0.Final\n" +
+                "    version: [3.0.0.Final]\n" +
                 "  - groupId: io.undertow\n" +
                 "    artifactId: undertow-core\n" +
-                "    version: 3.0.1.Final\n" +
+                "    version: [3.0.1.Final]\n" +
                 "  - groupId: io.undertow\n" +
                 "    artifactId: undertow-servlet\n" +
-                "    version: 3.0.2.Final";
+                "    version: [3.0.2.Final]";
         ChannelManifest manifest = ChannelManifestMapper.fromString(yamlContent);
 
         Optional<Stream> stream = manifest.findStreamFor("io.undertow", "undertow-core");

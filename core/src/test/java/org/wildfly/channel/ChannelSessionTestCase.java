@@ -193,7 +193,7 @@ public class ChannelSessionTestCase {
                 "streams:\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: foo\n" +
-                "    version: \"25.0.0.Final\"";
+                "    version: [\"25.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
@@ -231,10 +231,10 @@ public class ChannelSessionTestCase {
                                                              "streams:\n" +
                                                              "  - groupId: org.foo\n" +
                                                              "    artifactId: foo\n" +
-                                                             "    version: \"25.0.0.Final\"\n" +
+                                                             "    version: [\"25.0.0.Final\"]\n" +
                                                              "  - groupId: org.bar\n" +
                                                              "    artifactId: bar\n" +
-                                                             "    version: \"26.0.0.Final\"";
+                                                             "    version: [\"26.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
@@ -278,12 +278,12 @@ public class ChannelSessionTestCase {
                                                              "streams:\n" +
                                                              "  - groupId: org.foo\n" +
                                                              "    artifactId: foo\n" +
-                                                             "    version: \"25.0.0.Final\"\n";
+                                                             "    version: [\"25.0.0.Final\"]\n";
         String manifest2 =                                   "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                                                              "streams:\n" +
                                                              "  - groupId: org.bar\n" +
                                                              "    artifactId: bar\n" +
-                                                             "    version: \"26.0.0.Final\"";
+                                                             "    version: [\"26.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
@@ -340,7 +340,7 @@ public class ChannelSessionTestCase {
                                                              "streams:\n" +
                                                              "  - groupId: org.not\n" +
                                                              "    artifactId: used\n" +
-                                                             "    version: \"1.0.0.Final\"";
+                                                             "    version: [\"1.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
@@ -384,12 +384,12 @@ public class ChannelSessionTestCase {
                 "streams:\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: foo\n" +
-                "    version: \"25.0.0.Final\"";
+                "    version: [\"25.0.0.Final\"]";
         String manifest2 = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: foo\n" +
-                "    version: \"26.0.0.Final\"";
+                "    version: [\"26.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);

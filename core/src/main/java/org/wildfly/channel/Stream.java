@@ -20,6 +20,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -63,6 +64,7 @@ public class Stream implements Comparable<Stream> {
     private final Pattern versionPattern;
 
     private VersionMatcher versionMatcher;
+    private Set<String> versions;
 
     /**
      * @see #Stream(String, String, String, Pattern)
@@ -79,7 +81,7 @@ public class Stream implements Comparable<Stream> {
     public Stream(String groupId,
                   String artifactId,
                   Pattern versionPattern) {
-        this(groupId, artifactId, null, versionPattern);
+        this(groupId, artifactId, (String)null, versionPattern);
     }
 
     /**
@@ -95,14 +97,22 @@ public class Stream implements Comparable<Stream> {
     @JsonCreator
     public Stream(@JsonProperty(value = "groupId", required = true) String groupId,
            @JsonProperty(value = "artifactId", required = true) String artifactId,
-           @JsonProperty("version") String version,
+           @JsonProperty("version") Set<String> versions,
            @JsonProperty("versionPattern") Pattern versionPattern) {
         this.groupId = groupId;
         this.artifactId = artifactId;
-        this.version = version;
+        this.version = versions != null? versions.stream().sorted(VersionMatcher.COMPARATOR.reversed()).findFirst().get():null;
+        this.versions = versions;
         this.versionPattern = versionPattern;
         validate();
         initVersionMatcher();
+    }
+
+    public Stream(String groupId,
+                  String artifactId,
+                  String version,
+                  Pattern versionPattern) {
+        this(groupId, artifactId, version!=null?Set.of(version):null, versionPattern);
     }
 
     private void initVersionMatcher() {
@@ -137,6 +147,12 @@ public class Stream implements Comparable<Stream> {
     }
 
     @JsonInclude(NON_NULL)
+    @JsonProperty(value = "version")
+    public Set<String> getVersions() {
+        return versions;
+    }
+
+    @JsonIgnore
     public String getVersion() {
         return version;
     }

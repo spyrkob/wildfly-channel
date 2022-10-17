@@ -3,7 +3,7 @@ name: 2nd level requiring manifest
 streams:
   - groupId: org.example
     artifactId: foo-bar
-    version: 1.0.0.Final
+    version: [1.0.0.Final]
   - groupId: org.example
     artifactId: im-only-in-second-level
-    version: 1.0.0.Final
+    version: [1.0.0.Final]

@@ -203,7 +203,7 @@ public class ChannelWithRequirementsTestCase {
                 "streams:\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: foo-bar\n" +
-                "    version: 2.0.0.Final";
+                "    version: [2.0.0.Final]";
 
         mockManifest(resolver, manifest, "org.channels:base-manifest:1.0.0");
 
@@ -228,7 +228,7 @@ public class ChannelWithRequirementsTestCase {
                         "streams:\n" +
                         "  - groupId: org.example\n" +
                         "    artifactId: foo-bar\n" +
-                        "    version: 1.0.0.Final";
+                        "    version: [1.0.0.Final]";
 
         mockManifest(resolver, manifest, "org.channels:base-manifest:1.0.0");
 
@@ -381,13 +381,13 @@ public class ChannelWithRequirementsTestCase {
                 "streams:\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: im-only-in-required-channel\n" +
-                "    version: 2.0.0.Final\n" +
+                "    version: [2.0.0.Final]\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: foo-bar\n" +
-                "    version: 2.0.0.Final\n" +
+                "    version: [2.0.0.Final]\n" +
                 "  - groupId: org.example\n" +
                 "    artifactId: im-only-in-second-level\n" +
-                "    version: 2.0.0.Final";
+                "    version: [2.0.0.Final]";
 
         mockManifest(resolver, manifest, "org.channels:base-manifest:1.0.0");
 

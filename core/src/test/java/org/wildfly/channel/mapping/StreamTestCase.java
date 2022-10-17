@@ -45,7 +45,7 @@ public class StreamTestCase {
     public void testValidStream() throws IOException {
         Stream stream = fromYamlContent("groupId: org.wildfly\n" +
                 "artifactId: wildfly-ee-galleon-pack\n" +
-                "version: 26.0.0.Final");
+                "version: [26.0.0.Final]");
         assertEquals("org.wildfly", stream.getGroupId());
         assertEquals("wildfly-ee-galleon-pack", stream.getArtifactId());
         assertEquals("26.0.0.Final", stream.getVersion());
@@ -71,7 +71,7 @@ public class StreamTestCase {
 
             fromYamlContent("groupId: '*'\n" +
                     "artifactId: '*'\n" +
-                    "version: 1.1.1.Final");
+                    "version: [1.1.1.Final]");
         });
     }
 
@@ -79,7 +79,7 @@ public class StreamTestCase {
     public void testAnyArtifactIdStream() throws IOException {
         Stream stream = fromYamlContent("groupId: org.wildfly\n" +
                 "artifactId: '*'\n" +
-                "version: 1.2.0.Final");
+                "version: [1.2.0.Final]");
         assertEquals("org.wildfly", stream.getGroupId());
         assertEquals("*", stream.getArtifactId());
     }
@@ -88,7 +88,7 @@ public class StreamTestCase {
     public void testGroupIdIsMandatory() {
         assertThrows(Exception.class, () -> {
             fromYamlContent("artifactId: wildfly-ee-galleon-pack\n" +
-                    "version: 26.0.0.Final");
+                    "version: [26.0.0.Final]");
         });
     }
 
@@ -96,7 +96,7 @@ public class StreamTestCase {
     public void testArtifactIdIsMandatory() {
         assertThrows(Exception.class, () -> {
             fromYamlContent("groupId: org.wildfly\n" +
-                    "version: 26.0.0.Final");
+                    "version: [26.0.0.Final]");
         });
     }
 

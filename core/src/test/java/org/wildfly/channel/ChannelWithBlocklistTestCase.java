@@ -249,7 +249,7 @@ public class ChannelWithBlocklistTestCase {
                 "    versionPattern: \".*\"\n" +
                 "  - groupId: org.wildfly\n" +
                 "    artifactId: wildfly-cli\n" +
-                "    version: \"26.0.0.Final\"";
+                "    version: [\"26.0.0.Final\"]";
 
         MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);

@@ -6,4 +6,4 @@ description: |-
 streams:
   - groupId: org.wildfly
     artifactId: wildfly-ee-galleon-pack
-    version: 26.0.0.Final
+    version: [26.0.0.Final]
