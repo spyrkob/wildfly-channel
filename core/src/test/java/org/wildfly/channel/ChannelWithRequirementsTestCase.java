@@ -23,7 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,11 +75,14 @@ public class ChannelWithRequirementsTestCase {
         when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
 
-        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
-                "    artifactId: required-channel");
+                "    artifactId: required-channel\n" +
+                "repositories:\n" +
+                "  - id: test\n" +
+                "    url: test");
         assertEquals(1, channels.size());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
@@ -122,12 +124,15 @@ public class ChannelWithRequirementsTestCase {
         when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile);
 
-        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: required-channel\n" +
-                "    version: 2.0.0.Final");
+                "    version: 2.0.0.Final\n" +
+                "repositories:\n" +
+                "  - id: test\n" +
+                "    url: test");
         assertEquals(1, channels.size());
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
@@ -185,7 +190,7 @@ public class ChannelWithRequirementsTestCase {
 
         // The requiring channel requires newer version of foo-bar artifact
         List<Channel> channels = ChannelMapper.fromString(
-                "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+                "schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
@@ -193,12 +198,11 @@ public class ChannelWithRequirementsTestCase {
                 "    version: 2.0.0.Final\n" +
                 "manifest:\n" +
                 "  gav: org.channels:base-manifest:1.0.0\n" +
-                "streams:\n" +
-                "  - groupId: org.example\n" +
-                "    artifactId: foo-bar\n" +
-                "    version: 2.0.0.Final");
+                "repositories:\n" +
+                "- id: test\n" +
+                "  url: test-repository");
 
-        String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        String manifest = "schemaVersion: " + ManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My manifest\n" +
                 "streams:\n" +
                 "  - groupId: org.example\n" +
@@ -225,7 +229,7 @@ public class ChannelWithRequirementsTestCase {
 
 
         // The requiring channel requires older version of foo-bar artifact.
-        manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        manifest = "schemaVersion: " + ManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
                         "name: My Channel\n" +
                         "streams:\n" +
                         "  - groupId: org.example\n" +
@@ -250,12 +254,8 @@ public class ChannelWithRequirementsTestCase {
 
         // The requiring channel specifies wildcard for version, newest version should be used
         // the newest version is 2.0.0.Final
-        manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        manifest = "schemaVersion: " + ManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
                         "name: My Channel\n" +
-                        "requires:\n" +
-                        "  - groupId: org.foo\n" +
-                        "    artifactId: required-channel\n" +
-                        "    version: 2.0.0.Final\n" +
                         "streams:\n" +
                         "  - groupId: org.example\n" +
                         "    artifactId: foo-bar\n" +
@@ -333,12 +333,15 @@ public class ChannelWithRequirementsTestCase {
         when(resolver.resolveArtifact("org.example", "im-only-in-second-level", null, null, "2.0.0.Final"))
                 .thenReturn(mock(File.class));
 
-        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                         "name: root level requiring channel\n"+
                         "requires:\n" +
                         "  - groupId: org.foo\n" +
                         "    artifactId: 2nd-level-requiring-channel\n" +
-                        "    version: 2.0.0.Final");
+                        "    version: 2.0.0.Final\n" +
+                        "repositories:\n" +
+                        "  - id: test\n" +
+                        "    url: test");
 
         // check that streams from required channel propagate to root channel
         try (ChannelSession session = new ChannelSession(channels, factory)) {
@@ -375,15 +378,18 @@ public class ChannelWithRequirementsTestCase {
         }
 
         // check that root level can override all streams from required channels
-        channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: 2nd-level-requiring-channel\n" +
                 "    version: 2.0.0.Final\n" +
                 "manifest:\n" +
-                "  gav: org.channels:base-manifest:1.0.0\n");
-        String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+                "  gav: org.channels:base-manifest:1.0.0\n" +
+                "repositories:\n" +
+                "  - id: test\n" +
+                "    url: test");
+        String manifest = "schemaVersion: " + ManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring manifest\n" +
                 "streams:\n" +
                 "  - groupId: org.example\n" +
@@ -482,7 +488,7 @@ public class ChannelWithRequirementsTestCase {
         when(resolver.resolveArtifact(eq("test.channels"), eq("required-manifest-2"), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
                 .thenReturn(resolvedRequiredManifestFile2);
 
-        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        List<Channel> channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
@@ -490,7 +496,10 @@ public class ChannelWithRequirementsTestCase {
                 "    version: 2.0.0.Final\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: required-channel-2\n" +
-                "    version: 2.0.0.Final");
+                "    version: 2.0.0.Final\n" +
+                "repositories:\n" +
+                "  - id: test\n" +
+                "    url: test");
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             MavenArtifact artifact = session.resolveMavenArtifact("org.example", "foo-bar", null, null, "0");
@@ -513,7 +522,7 @@ public class ChannelWithRequirementsTestCase {
             assertEquals("1.0.0.Final", artifact.getVersion());
         }
 
-        channels = ChannelMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        channels = ChannelMapper.fromString("schemaVersion: " + ChannelMapper.CURRENT_SCHEMA_VERSION + "\n" +
                 "name: root level requiring channel\n" +
                 "requires:\n" +
                 "  - groupId: org.foo\n" +
@@ -521,8 +530,10 @@ public class ChannelWithRequirementsTestCase {
                 "    version: 2.0.0.Final\n" +
                 "  - groupId: org.foo\n" +
                 "    artifactId: required-channel\n" +
-                "    version: 2.0.0.Final"
-        );
+                "    version: 2.0.0.Final\n" +
+                "repositories:\n" +
+                "  - id: test\n" +
+                "    url: test");
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             MavenArtifact artifact = session.resolveMavenArtifact("org.example", "foo-bar", null, null, "0");

@@ -2,7 +2,7 @@
   "$id": "https://wildfly.org/channels/v2.0.0/schema.json",
   "$schema": "http://json-schema.org/draft/2019-09/schema#",
   "type": "object",
-  "required": ["schemaVersion", "manifest", "repositories"],
+  "required": ["schemaVersion", "repositories"],
   "properties": {
     "schemaVersion": {
       "description": "The version of the schema defining a channel resource.",
