@@ -19,7 +19,7 @@ package org.wildfly.channel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ChannelManifestMapper.CURRENT_SCHEMA_VERSION;
 
 import java.util.Optional;
 
@@ -41,7 +41,7 @@ public class StreamResolverTestCase {
                 "  - groupId: io.undertow\n" +
                 "    artifactId: undertow-servlet\n" +
                 "    version: 3.0.2.Final";
-        Manifest manifest = ManifestMapper.fromString(yamlContent);
+        ChannelManifest manifest = ChannelManifestMapper.fromString(yamlContent);
 
         Optional<Stream> stream = manifest.findStreamFor("io.undertow", "undertow-core");
         assertTrue(stream.isPresent());

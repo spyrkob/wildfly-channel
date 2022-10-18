@@ -31,7 +31,7 @@ import java.util.TreeSet;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
-public class Manifest implements AutoCloseable {
+public class ChannelManifest implements AutoCloseable {
 
     public static final String CLASSIFIER="manifest";
     public static final String EXTENSION="yaml";
@@ -46,10 +46,10 @@ public class Manifest implements AutoCloseable {
 
     private MavenVersionsResolver resolver;
 
-    public Manifest(String name,
-                   String description,
-                    Collection<Stream> streams) {
-        this(ManifestMapper.CURRENT_SCHEMA_VERSION,
+    public ChannelManifest(String name,
+                           String description,
+                           Collection<Stream> streams) {
+        this(ChannelManifestMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
                 streams);
@@ -57,10 +57,10 @@ public class Manifest implements AutoCloseable {
 
     @JsonCreator
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "streams" })
-    public Manifest(@JsonProperty(value = "schemaVersion", required = true) String schemaVersion,
-                   @JsonProperty(value = "name") String name,
-                   @JsonProperty(value = "description") String description,
-                   @JsonProperty(value = "streams") Collection<Stream> streams) {
+    public ChannelManifest(@JsonProperty(value = "schemaVersion", required = true) String schemaVersion,
+                           @JsonProperty(value = "name") String name,
+                           @JsonProperty(value = "description") String description,
+                           @JsonProperty(value = "streams") Collection<Stream> streams) {
         this.schemaVersion = schemaVersion;
         this.name = name;
         this.description = description;

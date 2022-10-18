@@ -26,8 +26,8 @@ class ChannelRecorder {
         streams.putIfAbsent(groupId + ":" + artifactId + ":" + version, new Stream(groupId, artifactId, version, null));
     }
 
-    Manifest getRecordedChannel() {
-        return new Manifest(null,
+    ChannelManifest getRecordedChannel() {
+        return new ChannelManifest(null,
                            null,
                             new ArrayList<Stream>(streams.values()));
     }

@@ -84,15 +84,15 @@ public class Channel implements AutoCloseable {
      */
     private List<Channel> requiredChannels = Collections.emptyList();
 
-    private Manifest manifest;
+    private ChannelManifest channelManifest;
 
     private ManifestRef manifestRef;
 
     private MavenVersionsResolver resolver;
 
     @JsonIgnore
-    public Manifest getManifest() {
-        return manifest;
+    public ChannelManifest getManifest() {
+        return channelManifest;
     }
 
     /**
@@ -119,7 +119,7 @@ public class Channel implements AutoCloseable {
                    String description,
                    Vendor vendor,
                    List<ChannelRequirement> channelRequirements,
-                   Manifest manifest) {
+                   ChannelManifest channelManifest) {
         this(ChannelMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
@@ -127,7 +127,7 @@ public class Channel implements AutoCloseable {
                 channelRequirements,
                 emptyList(),
                 null);
-        this.manifest = manifest;
+        this.channelManifest = channelManifest;
     }
 
     /**
@@ -200,13 +200,13 @@ public class Channel implements AutoCloseable {
 
         if (manifestRef != null) {
             try {
-                manifest = resolveManifest(manifestRef);
-                manifest.init(resolver);
+                channelManifest = resolveManifest(manifestRef);
+                channelManifest.init(resolver);
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            manifest = new Manifest(null, null, Collections.emptyList());
+            channelManifest = new ChannelManifest(null, null, Collections.emptyList());
         }
 
 
@@ -254,21 +254,21 @@ public class Channel implements AutoCloseable {
         }
     }
 
-    private Manifest resolveManifest(ManifestRef manifestRef) throws UnresolvedMavenArtifactException, MalformedURLException {
+    private ChannelManifest resolveManifest(ManifestRef manifestRef) throws UnresolvedMavenArtifactException, MalformedURLException {
         if (manifestRef.getUrl() != null) {
-            return ManifestMapper.from(new URL(manifestRef.getUrl()));
+            return ChannelManifestMapper.from(new URL(manifestRef.getUrl()));
         }
 
         String version = manifestRef.getVersion();
         if (version == null) {
-            Set<String> versions = resolver.getAllVersions(manifestRef.getGroupId(), manifestRef.getArtifactId(), Manifest.EXTENSION, Manifest.CLASSIFIER);
+            Set<String> versions = resolver.getAllVersions(manifestRef.getGroupId(), manifestRef.getArtifactId(), ChannelManifest.EXTENSION, ChannelManifest.CLASSIFIER);
             Optional<String> latestVersion = VersionMatcher.getLatestVersion(versions);
             version = latestVersion.orElseThrow(() -> {
                 throw new UnresolvedMavenArtifactException(String.format("Unable to resolve the latest version of manifest %s:%s", manifestRef.getGroupId(), manifestRef.getArtifactId()));
             });
         }
-        File channelArtifact = resolver.resolveArtifact(manifestRef.getGroupId(), manifestRef.getArtifactId(), Manifest.EXTENSION, Manifest.CLASSIFIER, version);
-        return ManifestMapper.from(channelArtifact.toURI().toURL());
+        File channelArtifact = resolver.resolveArtifact(manifestRef.getGroupId(), manifestRef.getArtifactId(), ChannelManifest.EXTENSION, ChannelManifest.CLASSIFIER, version);
+        return ChannelManifestMapper.from(channelArtifact.toURI().toURL());
     }
 
     Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier) {
@@ -277,7 +277,7 @@ public class Channel implements AutoCloseable {
         requireNonNull(resolver);
 
         // first we find if there is a stream for that given (groupId, artifactId).
-        Optional<Stream> foundStream = manifest.findStreamFor(groupId, artifactId);
+        Optional<Stream> foundStream = channelManifest.findStreamFor(groupId, artifactId);
 
         // no stream for this artifact, let's look into the required channel
         if (!foundStream.isPresent()) {

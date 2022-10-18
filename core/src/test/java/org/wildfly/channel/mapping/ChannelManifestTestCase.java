@@ -18,8 +18,8 @@ package org.wildfly.channel.mapping;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.wildfly.channel.Manifest;
-import org.wildfly.channel.ManifestMapper;
+import org.wildfly.channel.ChannelManifest;
+import org.wildfly.channel.ChannelManifestMapper;
 import org.wildfly.channel.Stream;
 
 import java.io.IOException;
@@ -31,16 +31,16 @@ import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ChannelManifestMapper.CURRENT_SCHEMA_VERSION;
 
-public class ManifestTestCase {
+public class ChannelManifestTestCase {
 
     @Test
     public void nonExistingManifestTest() {
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         URL file = tccl.getResource("this-manifest-does-not-exist.yaml");
         Assertions.assertThrows(RuntimeException.class, () -> {
-            ManifestMapper.from(file);
+            ChannelManifestMapper.from(file);
         });
     }
 
@@ -49,7 +49,7 @@ public class ManifestTestCase {
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         URL file = tccl.getResource("channels/empty-channel.yaml");
         Assertions.assertThrows(RuntimeException.class, () -> {
-            ManifestMapper.from(file);
+            ChannelManifestMapper.from(file);
         });
     }
 
@@ -62,7 +62,7 @@ public class ManifestTestCase {
         {
             byte[] bytes = in.readAllBytes();
             String content = new String(bytes, Charset.defaultCharset());
-            Manifest manifest = ManifestMapper.fromString(content);
+            ChannelManifest manifest = ChannelManifestMapper.fromString(content);
             assertEquals("Channel for WildFly 27", manifest.getName());
         }
     }
@@ -72,7 +72,7 @@ public class ManifestTestCase {
         ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         URL file = tccl.getResource("channels/simple-manifest.yaml");
 
-        Manifest manifest = ManifestMapper.from(file);
+        ChannelManifest manifest = ChannelManifestMapper.from(file);
 
         assertEquals("My Channel", manifest.getName());
         assertEquals("This is my manifest\n" +
@@ -88,7 +88,7 @@ public class ManifestTestCase {
 
     @Test
     public void manifestWithoutStreams() {
-        Manifest manifest = ManifestMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
+        ChannelManifest manifest = ChannelManifestMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "name: My Channel\n" +
                 "description: |-\n" +
                 "  This is my manifest\n" +

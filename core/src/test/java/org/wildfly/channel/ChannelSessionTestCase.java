@@ -32,7 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.wildfly.channel.ManifestMapper.CURRENT_SCHEMA_VERSION;
+import static org.wildfly.channel.ChannelManifestMapper.CURRENT_SCHEMA_VERSION;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class ChannelSessionTestCase {
                     new ManifestRef(null, "org.channels:channel" + i + ":1.0.0")));
             String manifest = manifests[i];
             Path manifestFile = Files.writeString(tempDir.resolve("manifest" + i +".yaml"), manifest);
-            when(resolver.resolveArtifact(eq("org.channels"), eq("channel" + i), eq(Manifest.EXTENSION), eq(Manifest.CLASSIFIER), eq("1.0.0")))
+            when(resolver.resolveArtifact(eq("org.channels"), eq("channel" + i), eq(ChannelManifest.EXTENSION), eq(ChannelManifest.CLASSIFIER), eq("1.0.0")))
                     .thenReturn(manifestFile.toFile());
         }
         return channels;

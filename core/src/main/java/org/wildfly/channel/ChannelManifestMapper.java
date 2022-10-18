@@ -47,7 +47,7 @@ import static java.util.Objects.requireNonNull;
  *
  * YAML input is validated against a schema.
  */
-public class ManifestMapper {
+public class ChannelManifestMapper {
 
     public static final String SCHEMA_VERSION_1_0_0 = "1.0.0";
     public static final String CURRENT_SCHEMA_VERSION = SCHEMA_VERSION_1_0_0;
@@ -62,7 +62,7 @@ public class ManifestMapper {
     private static final Map<String, JsonSchema> SCHEMAS = new HashMap<>();
 
     static {
-        SCHEMAS.put(SCHEMA_VERSION_1_0_0, SCHEMA_FACTORY.getSchema(ManifestMapper.class.getClassLoader().getResourceAsStream(SCHEMA_1_0_0_FILE)));
+        SCHEMAS.put(SCHEMA_VERSION_1_0_0, SCHEMA_FACTORY.getSchema(ChannelManifestMapper.class.getClassLoader().getResourceAsStream(SCHEMA_1_0_0_FILE)));
     }
 
     private static JsonSchema getSchema(JsonNode node) {
@@ -78,14 +78,14 @@ public class ManifestMapper {
         return schema;
     }
 
-    public static String toYaml(Manifest manifest) throws IOException {
-        Objects.requireNonNull(manifest);
+    public static String toYaml(ChannelManifest channelManifest) throws IOException {
+        Objects.requireNonNull(channelManifest);
         StringWriter w = new StringWriter();
-        OBJECT_MAPPER.writeValue(w, manifest);
+        OBJECT_MAPPER.writeValue(w, channelManifest);
         return w.toString();
     }
 
-    public static Manifest from(URL manifestURL) throws InvalidChannelException {
+    public static ChannelManifest from(URL manifestURL) throws InvalidChannelException {
         requireNonNull(manifestURL);
 
         try {
@@ -98,14 +98,14 @@ public class ManifestMapper {
             if (!messages.isEmpty()) {
                 throw new InvalidChannelException("Invalid manifest", messages);
             }
-            Manifest manifest = OBJECT_MAPPER.readValue(manifestURL, Manifest.class);
-            return manifest;
+            ChannelManifest channelManifest = OBJECT_MAPPER.readValue(manifestURL, ChannelManifest.class);
+            return channelManifest;
         } catch (IOException | URISyntaxException e) {
             throw wrapException(e);
         }
     }
 
-    public static Manifest fromString(String yamlContent) throws InvalidChannelException {
+    public static ChannelManifest fromString(String yamlContent) throws InvalidChannelException {
         requireNonNull(yamlContent);
 
         try {
@@ -115,8 +115,8 @@ public class ManifestMapper {
             }
 
             YAMLParser parser = YAML_FACTORY.createParser(yamlContent);
-            Manifest manifest = OBJECT_MAPPER.readValue(parser, Manifest.class);
-            return manifest;
+            ChannelManifest channelManifest = OBJECT_MAPPER.readValue(parser, ChannelManifest.class);
+            return channelManifest;
         } catch (IOException e) {
             throw wrapException(e);
         }
