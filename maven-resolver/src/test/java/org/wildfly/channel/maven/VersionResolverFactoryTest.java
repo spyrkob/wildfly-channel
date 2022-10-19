@@ -46,6 +46,7 @@ import org.eclipse.aether.resolution.VersionRangeResult;
 import org.eclipse.aether.version.Version;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.wildfly.channel.ArtifactCoordinate;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
@@ -170,6 +171,74 @@ public class VersionResolverFactoryTest {
 
         assertEquals(artifactFile1, res.get(0));
         assertEquals(artifactFile2, res.get(1));
+    }
+
+    @Test
+    public void testResolverResolveMetadataUsingUrl() throws ArtifactResolutionException, MalformedURLException {
+
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        List<URL> resolvedURL = resolver.resolveChannelMetadata(List.of(new ChannelCoordinate(new URL("http://test.channel"))));
+        assertEquals(new URL("http://test.channel"), resolvedURL.get(0));
+    }
+
+    @Test
+    public void testResolverResolveMetadataUsingGa() throws ArtifactResolutionException, MalformedURLException, VersionRangeResolutionException {
+
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        File artifactFile = new File("test");
+        ArtifactResult artifactResult = new ArtifactResult(new ArtifactRequest());
+        Artifact artifact = mock(Artifact.class);
+        artifactResult.setArtifact(artifact);
+        when (artifact.getFile()).thenReturn(artifactFile);
+        VersionRangeResult versionRangeResult = new VersionRangeResult(new VersionRangeRequest());
+        Version v100 = mock(Version.class);
+        when(v100.toString()).thenReturn("1.0.0");
+        Version v110 = mock(Version.class);
+        when(v110.toString()).thenReturn("1.1.0");
+        Version v111 = mock(Version.class);
+        when(v111.toString()).thenReturn("1.1.1");
+        versionRangeResult.setVersions(asList(v100, v110, v111));
+        when(system.resolveVersionRange(eq(session), any())).thenReturn(versionRangeResult);
+        final ArgumentCaptor<ArtifactRequest> artifactRequestArgumentCaptor = ArgumentCaptor.forClass(ArtifactRequest.class);
+        when(system.resolveArtifact(eq(session), artifactRequestArgumentCaptor.capture())).thenReturn(artifactResult);
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        List<URL> resolvedURL = resolver.resolveChannelMetadata(List.of(new ChannelCoordinate("org.test", "channel")));
+        assertEquals(artifactFile.toURI().toURL(), resolvedURL.get(0));
+        assertEquals("1.1.1", artifactRequestArgumentCaptor.getAllValues().get(0).getArtifact().getVersion());
+    }
+
+    @Test
+    public void testResolverResolveMetadataUsingGav() throws ArtifactResolutionException, MalformedURLException, VersionRangeResolutionException {
+
+        RepositorySystem system = mock(RepositorySystem.class);
+        RepositorySystemSession session = mock(RepositorySystemSession.class);
+
+        File artifactFile = new File("test");
+        ArtifactResult artifactResult = new ArtifactResult(new ArtifactRequest());
+        Artifact artifact = mock(Artifact.class);
+        artifactResult.setArtifact(artifact);
+        when (artifact.getFile()).thenReturn(artifactFile);
+        VersionRangeResult versionRangeResult = new VersionRangeResult(new VersionRangeRequest());
+        Version v100 = mock(Version.class);
+        final ArgumentCaptor<ArtifactRequest> artifactRequestArgumentCaptor = ArgumentCaptor.forClass(ArtifactRequest.class);
+        when(system.resolveArtifact(eq(session), artifactRequestArgumentCaptor.capture())).thenReturn(artifactResult);
+
+        VersionResolverFactory factory = new VersionResolverFactory(system, session);
+        MavenVersionsResolver resolver = factory.create(Collections.emptyList());
+
+        List<URL> resolvedURL = resolver.resolveChannelMetadata(List.of(new ChannelCoordinate("org.test", "channel", "1.0.0")));
+        assertEquals(artifactFile.toURI().toURL(), resolvedURL.get(0));
+        assertEquals("1.0.0", artifactRequestArgumentCaptor.getAllValues().get(0).getArtifact().getVersion());
     }
 }
 

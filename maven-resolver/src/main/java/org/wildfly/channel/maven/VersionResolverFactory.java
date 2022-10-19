@@ -22,6 +22,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +47,7 @@ import org.eclipse.aether.version.Version;
 import org.wildfly.channel.ArtifactCoordinate;
 import org.wildfly.channel.Channel;
 import org.wildfly.channel.ChannelMapper;
+import org.wildfly.channel.ChannelMetadataCoordinate;
 import org.wildfly.channel.Repository;
 import org.wildfly.channel.UnresolvedMavenArtifactException;
 import org.wildfly.channel.spi.MavenVersionsResolver;
@@ -173,6 +175,39 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
                 throw new UnresolvedMavenArtifactException(ex.getLocalizedMessage(), ex, failed);
             }
         }
+
+        public List<URL> resolveChannelMetadata(List<? extends ChannelMetadataCoordinate> manifestCoords) throws UnresolvedMavenArtifactException {
+            requireNonNull(manifestCoords);
+
+            List<URL> channels = new ArrayList<>();
+
+            for (ChannelMetadataCoordinate channelCoord : manifestCoords) {
+                if (channelCoord.getUrl() != null) {
+                    LOG.infof("Resolving channel at %s", channelCoord.getUrl());
+                    channels.add(channelCoord.getUrl());
+                    continue;
+                }
+
+                String version = channelCoord.getVersion();
+                if (version == null) {
+                    Set<String> versions = getAllVersions(channelCoord.getGroupId(), channelCoord.getArtifactId(), channelCoord.getExtension(), channelCoord.getClassifier());
+                    Optional<String> latestVersion = VersionMatcher.getLatestVersion(versions);
+                    version = latestVersion.orElseThrow(() -> {
+                        throw new UnresolvedMavenArtifactException(String.format("Unable to resolve the latest version of channel %s:%s", channelCoord.getGroupId(), channelCoord.getArtifactId()));
+                    });
+                }
+                LOG.infof("Resolving channel from Maven artifact %s:%s:%s", channelCoord.getGroupId(), channelCoord.getArtifactId(), version);
+                File channelArtifact = resolveArtifact(channelCoord.getGroupId(), channelCoord.getArtifactId(), channelCoord.getExtension(), channelCoord.getClassifier(), version);
+                try {
+                    channels.add(channelArtifact.toURI().toURL());
+                } catch (MalformedURLException e) {
+                    throw new UnresolvedMavenArtifactException("Unable to resolve channel metadata.", e,
+                            Set.of(new ArtifactCoordinate(channelCoord.getGroupId(), channelCoord.getArtifactId(),
+                                    channelCoord.getExtension(), channelCoord.getClassifier(), channelCoord.getVersion())));
+                }
+            }
+            return channels;
+        }
     }
 
     /**
@@ -190,32 +225,11 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
     public List<Channel> resolveChannels(List<ChannelCoordinate> channelCoords, List<RemoteRepository> repositories) throws UnresolvedMavenArtifactException, MalformedURLException {
         requireNonNull(channelCoords);
 
-        List<Channel> channels = new ArrayList<>();
         try (MavenVersionsResolver resolver = create(repositories)) {
-
-            for (ChannelCoordinate channelCoord : channelCoords) {
-                if (channelCoord.getUrl() != null) {
-                    Channel channel = ChannelMapper.from(channelCoord.getUrl());
-                    LOG.infof("Resolving channel at %s", channelCoord.getUrl());
-                    channels.add(channel);
-                    continue;
-                }
-
-                String version = channelCoord.getVersion();
-                if (version == null) {
-                    Set<String> versions = resolver.getAllVersions(channelCoord.getGroupId(), channelCoord.getArtifactId(), channelCoord.getExtension(), channelCoord.getClassifier());
-                    Optional<String> latestVersion = VersionMatcher.getLatestVersion(versions);
-                    version = latestVersion.orElseThrow(() -> {
-                        throw new UnresolvedMavenArtifactException(String.format("Unable to resolve the latest version of channel %s:%s", channelCoord.getGroupId(), channelCoord.getArtifactId()));
-                    });
-                }
-                LOG.infof("Resolving channel from Maven artifact %s:%s:%s", channelCoord.getGroupId(), channelCoord.getArtifactId(), version);
-                File channelArtifact = resolver.resolveArtifact(channelCoord.getGroupId(), channelCoord.getArtifactId(), channelCoord.getExtension(), channelCoord.getClassifier(), version);
-                Channel channel = ChannelMapper.from(channelArtifact.toURI().toURL());
-                channels.add(channel);
-            }
+            return resolver.resolveChannelMetadata(channelCoords).stream()
+                    .map(ChannelMapper::from)
+                    .collect(Collectors.toList());
         }
-        return channels;
     }
 }
 

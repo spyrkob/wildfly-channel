@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,8 +45,8 @@ import org.wildfly.channel.version.VersionMatcher;
  */
 public class Channel implements AutoCloseable {
 
-    private static final String CLASSIFIER="channel";
-    private static final String EXTENSION="yaml";
+    public static final String CLASSIFIER="channel";
+    public static final String EXTENSION="yaml";
 
     /** Version of the schema used by this channel.
      * This is a required field.
@@ -86,7 +85,7 @@ public class Channel implements AutoCloseable {
 
     private ChannelManifest channelManifest;
 
-    private ManifestRef manifestRef;
+    private ChannelManifestCoordinate manifestCoordinate;
 
     private MavenVersionsResolver resolver;
 
@@ -98,21 +97,21 @@ public class Channel implements AutoCloseable {
     /**
      * Representation of a Channel resource using the current schema version.
      *
-     * @see #Channel(String, String, Vendor, List, List, ManifestRef)
+     * @see #Channel(String, String, Vendor, List, List, ChannelManifestCoordinate)
      */
     public Channel(String name,
                    String description,
                    Vendor vendor,
                    List<ChannelRequirement> channelRequirements,
                    List<Repository> repositories,
-                   ManifestRef manifestRef) {
+                   ChannelManifestCoordinate manifestCoordinate) {
         this(ChannelMapper.CURRENT_SCHEMA_VERSION,
                 name,
                 description,
                 vendor,
                 channelRequirements,
                 repositories,
-                manifestRef);
+                manifestCoordinate);
     }
 
     Channel(String name,
@@ -149,14 +148,14 @@ public class Channel implements AutoCloseable {
                    @JsonInclude(NON_EMPTY) List<ChannelRequirement> channelRequirements,
                    @JsonProperty(value = "repositories")
                    @JsonInclude(NON_EMPTY) List<Repository> repositories,
-                   @JsonProperty(value = "manifest") ManifestRef manifestRef) {
+                   @JsonProperty(value = "manifest") ChannelManifestCoordinate manifestCoordinate) {
         this.schemaVersion = schemaVersion;
         this.name = name;
         this.description = description;
         this.vendor = vendor;
         this.channelRequirements = (channelRequirements != null) ? channelRequirements : emptyList();
         this.repositories = (repositories != null) ? repositories : emptyList();
-        this.manifestRef = manifestRef;
+        this.manifestCoordinate = manifestCoordinate;
     }
 
     @JsonInclude
@@ -191,16 +190,16 @@ public class Channel implements AutoCloseable {
     }
 
     @JsonProperty(value = "manifest")
-    public ManifestRef getManifestRef() {
-        return manifestRef;
+    public ChannelManifestCoordinate getManifestRef() {
+        return manifestCoordinate;
     }
 
     void init(MavenVersionsResolver.Factory factory) {
         resolver = factory.create(repositories);
 
-        if (manifestRef != null) {
+        if (manifestCoordinate != null) {
             try {
-                channelManifest = resolveManifest(manifestRef);
+                channelManifest = resolveManifest(manifestCoordinate);
                 channelManifest.init(resolver);
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
@@ -254,21 +253,11 @@ public class Channel implements AutoCloseable {
         }
     }
 
-    private ChannelManifest resolveManifest(ManifestRef manifestRef) throws UnresolvedMavenArtifactException, MalformedURLException {
-        if (manifestRef.getUrl() != null) {
-            return ChannelManifestMapper.from(new URL(manifestRef.getUrl()));
-        }
-
-        String version = manifestRef.getVersion();
-        if (version == null) {
-            Set<String> versions = resolver.getAllVersions(manifestRef.getGroupId(), manifestRef.getArtifactId(), ChannelManifest.EXTENSION, ChannelManifest.CLASSIFIER);
-            Optional<String> latestVersion = VersionMatcher.getLatestVersion(versions);
-            version = latestVersion.orElseThrow(() -> {
-                throw new UnresolvedMavenArtifactException(String.format("Unable to resolve the latest version of manifest %s:%s", manifestRef.getGroupId(), manifestRef.getArtifactId()));
-            });
-        }
-        File channelArtifact = resolver.resolveArtifact(manifestRef.getGroupId(), manifestRef.getArtifactId(), ChannelManifest.EXTENSION, ChannelManifest.CLASSIFIER, version);
-        return ChannelManifestMapper.from(channelArtifact.toURI().toURL());
+    private ChannelManifest resolveManifest(ChannelManifestCoordinate manifestCoordinate) throws UnresolvedMavenArtifactException, MalformedURLException {
+        return resolver.resolveChannelMetadata(List.of(manifestCoordinate))
+                .stream()
+                .map(ChannelManifestMapper::from)
+                .findFirst().orElseThrow();
     }
 
     Optional<ResolveLatestVersionResult> resolveLatestVersion(String groupId, String artifactId, String extension, String classifier) {
@@ -381,7 +370,7 @@ public class Channel implements AutoCloseable {
                 ", description='" + description + '\'' +
                 ", vendor=" + vendor +
                 ", channelRequirements=" + channelRequirements +
-                ", manifestRef=" + manifestRef +
+                ", manifestRef=" + manifestCoordinate +
                 '}';
     }
 }

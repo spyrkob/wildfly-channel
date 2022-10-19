@@ -33,7 +33,7 @@ public class ChannelMapperTestCase {
                 new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 Collections.emptyList(),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ManifestRef(null, "test.channels:channel"));
+                new ChannelManifestCoordinate("test.channels", "channel"));
         final String yaml = ChannelMapper.toYaml(channel);
 
         final Channel channel1 = ChannelMapper.fromString(yaml).get(0);
@@ -46,11 +46,11 @@ public class ChannelMapperTestCase {
         final Channel channel1 = new Channel("test_name_1", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 List.of(req),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ManifestRef(null, "test.channels:channel"));
+                new ChannelManifestCoordinate("test.channels", "channel"));
         final Channel channel2 = new Channel("test_name_2", "test_desc", new Vendor("test_vendor_name", Vendor.Support.COMMUNITY),
                 Collections.emptyList(),
                 List.of(new Repository("test", "https://test.org/repository")),
-                new ManifestRef("http://test.channels/channels", null));
+                new ChannelManifestCoordinate(new URL("http://test.channels/channels")));
         final String yaml = ChannelMapper.toYaml(channel1, channel2);
 
         System.out.println(yaml);
