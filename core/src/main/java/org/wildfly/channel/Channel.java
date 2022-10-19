@@ -83,8 +83,14 @@ public class Channel implements AutoCloseable {
      */
     private List<Channel> requiredChannels = Collections.emptyList();
 
+    /**
+     * Optional channel manifest specifying streams.
+     */
     private ChannelManifest channelManifest;
 
+    /**
+     * Optional coordinates (either URL or GA[V]) of a channel manifest
+     */
     private ChannelManifestCoordinate manifestCoordinate;
 
     private MavenVersionsResolver resolver;

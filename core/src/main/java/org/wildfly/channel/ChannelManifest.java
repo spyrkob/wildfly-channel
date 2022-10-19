@@ -31,21 +31,43 @@ import java.util.TreeSet;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+/**
+ * Java representation of a Channel Manifest.
+ */
 public class ChannelManifest implements AutoCloseable {
 
     public static final String CLASSIFIER="manifest";
     public static final String EXTENSION="yaml";
 
+    /**
+     * Version of the schema used by this manifest.
+     * This is a required field.
+     */
     private final String schemaVersion;
 
+    /**
+     * Optional manifest name.
+     * Short, one-line description of the manifest
+     */
     private final String name;
 
+    /**
+     * Optional description of the manifest. It can use multiple lines.
+     */
     private final String description;
 
+    /**
+     * Streams of components that are provided by this manifest.
+     */
     private Set<Stream> streams;
 
     private MavenVersionsResolver resolver;
 
+    /**
+     * Representation of a ChannelManifest resource using the current schema version.
+     *
+     * @see #ChannelManifest(String, String, String, Collection)
+     */
     public ChannelManifest(String name,
                            String description,
                            Collection<Stream> streams) {
@@ -55,6 +77,14 @@ public class ChannelManifest implements AutoCloseable {
                 streams);
     }
 
+    /**
+     * Representation of a Channel resource
+     *
+     * @param schemaVersion the version of the schema to validate this manifest resource - required
+     * @param name the name of the manifest - can be {@code null}
+     * @param description the description of the manifest - can be {@code null}
+     * @param streams the streams defined by the manifest - can be {@code null}
+     */
     @JsonCreator
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "streams" })
     public ChannelManifest(@JsonProperty(value = "schemaVersion", required = true) String schemaVersion,
