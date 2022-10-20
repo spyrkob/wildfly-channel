@@ -5,7 +5,8 @@
 
 [cols="1,1"]
 |===
-| Schema Version | 1.0.0 |
+| Channel schema Version | 2.0.0
+| Manifest schema Version | 1.0.0
 |===
 
 ### Summary
@@ -40,6 +41,8 @@ Backwards compatibility is only guaranteed inside a single channel. If an instal
 
 ## Channel Model
 
+Channel combines a Channel Manifest defining content of channel and one or more repositories from which the content can be reolved.
+
 A channel is composed of several fields:
 
 * An optional `name` that is a human-readable one-line description of the channel (`Channel for WildFly 27`)
@@ -55,6 +58,18 @@ This field can be used for layered products to enforce their dependencies so tha
 Each element is composed of:
 ** Mandatory `groupId` and `artifactId` elements that are the Maven coordinates of the required channel.
 ** Optional `version` to stick to a given channel version (instead of requiring the latest version of that channel). In the absence of this `version`, the latest version of the channel will be determined based on the Maven repository metadata.
+* A collection of `repositories` that defines repositories associated with the channel. Only listed repositories are used to resolve channel's components. Each repository is composed of:
+** A required `id` that defines the repository name used in Maven cache
+** A required `url` pointing to the Maven repository
+* Optional `manifest` corresponding to the Channel Manifest artefact. Channel Manifest is used to define streams available in the channel.
+** One of the following, mutually exclusive fields, used to resolve the Channel Manifest:
+*** `gav` corresponds to Maven coordinates of the Manifest. It can either use format of `groupId:artifactId` (resulting in latest available version being used) or `groupId:artifactId:version` (resulting in concrete version being used)
+*** `url` corresponding to a static URL where the manifest file can be found.
+
+A Channel Manifest is composed of following fields:
+
+* An optional `name` that is a human-readable one-line description of the channel (`Channel for WildFly 27`)
+* An optional `description` that provides human-readable description of the channel
 * A collection of `streams` that defines all the components installable from this channel. Each stream is composed of:
 ** A required `groupId` that corresponds to Maven GroupId to pull artifacts (it is not allowed to specify `*` for the groupId).
 ** A required `artifactId` that corresponds to Maven ArtifactId to pull artifacts. Special syntax `*` can be used to match _any_ artifactId.
@@ -69,27 +84,31 @@ A channel does not provide any default streams.
 
 ## Channel Schema
 
-A JSON Schema is provided to validate that channels comply with the model described above.
+JSON Schemas are provided to validate that channels and manifests comply with the model described above.
 
 ## Channel Representation
 
-A channel is specified in the YAML language with a link:../core/src/main/resources/org/wildfly/channel/v1.0.0./schema.json[corresponding JSON schema] to validate its structure.
+A channel is specified in the YAML language with a link:../core/src/main/resources/org/wildfly/channel/v2.0.0./schema.json[corresponding JSON schema] to validate its structure.
+
+A manifest is specified in the YAML language with a link:../core/src/main/resources/org/wildfly/manifest/v1.0.0./schema.json[corresponding JSON schema] to validate its structure.
 
 ### Channel Actions and Responsibilities
 
 #### Create a channel
 
 A Channel is a single file that complies with the channel YAML representation.
-Creating a channel corresponds to the creation of such a file.
+Creating a channel corresponds to the creation of such a file together with optional manifest file.
 
 #### Publish a channel
 A channel must be “published” so that it can be read (or downloaded) by WildFly provisioning tooling. 
-Channels are published as a Maven artifact with the the classifier `channel` and extension/type `yaml`.
+Channels are published as a Maven artifact with the classifier `channel` and extension/type `yaml`.
+Manifests are published as Maven artifacts with the classifier `manifest` and extension/type `yaml`. The manifest needs to be published in one of the repositories defined in the channel.
 
 #### Update a channel
 
-A channel definition can be updated to add or modify streams, change its requirements, etc.
+A channel definition and manifest can be updated to add or modify streams, change its requirements, etc.
 A new version of the channel must be published before it can be consumed.
+If the changes are limited to the manifest (e.g. only affect component versions), the channel definition doesn't need to be updated.
 
 #### Consume a channel
 The main consumers of WildFly Channels are the provisioning tooling provided by the WildFly project.
@@ -117,6 +136,10 @@ If the stream defines a `versionPattern`, the version will be determined by quer
 Maven repositories and use the latest version that matches the pattern. If no version matches the pattern, an error is returned to the caller.
 
 ### Changelog
+
+### Version 2.0.0
+
+* Introduction of the Channel Manifest
 
 ### Version 1.0.0
 
