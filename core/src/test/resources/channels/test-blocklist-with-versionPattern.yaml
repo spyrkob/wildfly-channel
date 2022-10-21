@@ -3,4 +3,4 @@ schemaVersion: 1.0.0
 streams:
   - groupId: org.wildfly
     artifactId: wildfly-ee-galleon-pack
-    version: [ 25.0.1.Final ]
+    versionPattern: "25.0.1.*"

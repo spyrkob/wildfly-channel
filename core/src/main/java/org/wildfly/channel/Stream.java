@@ -16,9 +16,11 @@
  */
 package org.wildfly.channel;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -102,7 +104,7 @@ public class Stream implements Comparable<Stream> {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = versions != null? versions.stream().sorted(VersionMatcher.COMPARATOR.reversed()).findFirst().get():null;
-        this.versions = versions;
+        this.versions = versions != null? versions: Collections.emptySet();
         this.versionPattern = versionPattern;
         validate();
         initVersionMatcher();
@@ -146,7 +148,7 @@ public class Stream implements Comparable<Stream> {
         return artifactId;
     }
 
-    @JsonInclude(NON_NULL)
+    @JsonInclude(NON_EMPTY)
     @JsonProperty(value = "version")
     public Set<String> getVersions() {
         return versions;

@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -70,9 +69,9 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(singleton("1.0.0.Final"));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null))
            .thenReturn(new HashSet<>(Arrays.asList("25.0.0.Final", "25.0.1.Final")));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
@@ -98,7 +97,9 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(Collections.emptySet());
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+            .thenReturn(Collections.emptyList());
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null))
            .thenReturn(new HashSet<>(Arrays.asList("25.0.0.Final", "25.0.1.Final")));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
@@ -124,9 +125,9 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(singleton("1.0.0.Final"));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist-with-wildcards.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist-with-wildcards.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null))
            .thenReturn(new HashSet<>(Arrays.asList("25.0.0.Final", "25.0.1.Final")));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
@@ -152,9 +153,9 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(new HashSet<>(singleton("1.0.0.Final")));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(new HashSet<>(singleton("25.0.1.Final")));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
 
@@ -184,9 +185,9 @@ public class ChannelWithBlocklistTestCase {
         File resolvedArtifactFile = mock(File.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(new HashSet<>(singleton("1.0.0.Final")));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(new HashSet<>(Set.of("25.0.0.Final", "25.0.1.Final")));
         when(resolver.resolveArtifact("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.0.Final")).thenReturn(resolvedArtifactFile);
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
@@ -221,9 +222,9 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(new HashSet<>(singleton("1.0.0.Final")));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(new HashSet<>(Set.of("25.0.1.Final","26.0.0.Final")));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
 
@@ -257,9 +258,9 @@ public class ChannelWithBlocklistTestCase {
         File resolvedArtifactFile2 = mock(File.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(new HashSet<>(singleton("1.0.0.Final")));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(new File(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml").toURI()));
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+           .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist.yaml")));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(new HashSet<>(Set.of("25.0.1.Final","25.0.0.Final")));
         final List<ArtifactCoordinate> coordinates = asList(
            new ArtifactCoordinate("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.0.Final"),
@@ -316,7 +317,6 @@ public class ChannelWithBlocklistTestCase {
         URL resolvedRequiredChannelURL = tccl.getResource("channels/channel-with-blocklist.yaml");
         File resolvedRequiredChannelFile = Paths.get(resolvedRequiredChannelURL.toURI()).toFile();
         URL resolvedBlocklistURL = tccl.getResource("channels/test-blocklist.yaml");
-        File resolvedBlocklistFile = Paths.get(resolvedBlocklistURL.toURI()).toFile();
         final Path manifestFile = tempDir.resolve("manifest.yaml");
         Files.writeString(manifestFile, manifest);
 
@@ -325,12 +325,13 @@ public class ChannelWithBlocklistTestCase {
            .thenReturn(Set.of("1"));
         when(resolver.resolveArtifact("org.foo", "required-channel", "yaml", "channel", "1"))
            .thenReturn(resolvedRequiredChannelFile);
-        when(resolver.getAllVersions("org.wildfly", "blocklist", "yaml", null)).thenReturn(singleton("1.0.0.Final"));
-        when(resolver.resolveArtifact("org.wildfly", "blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(resolvedBlocklistFile);
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "blocklist", "yaml")))))
+           .thenReturn(List.of(resolvedBlocklistURL));
         when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null))
            .thenReturn(new HashSet<>(Arrays.asList("25.0.0.Final", "25.0.1.Final")));
-        when(resolver.resolveChannelMetadata(any())).thenReturn(List.of(manifestFile.toUri().toURL()));
+        when(resolver.resolveChannelMetadata(List.of(new ChannelManifestCoordinate("org.test", "manifest"))))
+                .thenReturn(List.of(manifestFile.toUri().toURL()));
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             String version = session.findLatestMavenArtifactVersion("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.0.Final");
@@ -357,17 +358,55 @@ public class ChannelWithBlocklistTestCase {
         MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
 
         when(factory.create(any())).thenReturn(resolver);
-        when(resolver.getAllVersions("org.wildfly", "wildfly-blocklist", "yaml", null)).thenReturn(singleton("1.0.0.Final"));
-        when(resolver.resolveArtifact("org.wildfly", "wildfly-blocklist", "yaml", null, "1.0.0.Final"))
-           .thenReturn(resolvedBlocklistFile);
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+                .thenReturn(List.of(resolvedBlocklistFile.toURI().toURL()));
         final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
 
         try (ChannelSession session = new ChannelSession(channels, factory)) {
             fail("InvalidChannelException should have been thrown.");
         } catch (InvalidChannelException e) {
-            assertEquals(1, e.getValidationMessages().size());
-            assertTrue(e.getValidationMessages().get(0).contains("versions: is missing"), e.getValidationMessages().get(0));
+            assertEquals(2, e.getValidationMessages().size());
+            assertTrue(e.getValidationMessages().get(0).contains("version: is missing"), e.getValidationMessages().get(0));
         }
+    }
+
+    // TODO: blocklist with versionPattern
+    @Test
+    public void testBlocklistWithVersionPattern() throws Exception {
+        final String manifest =
+                "schemaVersion: " + ChannelManifestMapper.CURRENT_SCHEMA_VERSION + "\n" +
+                        "streams:\n" +
+                        "  - groupId: org.wildfly\n" +
+                        "    artifactId: '*'\n" +
+                        "    versionPattern: '25\\.\\d+\\.\\d+.Final'";
+
+        MavenVersionsResolver.Factory factory = mock(MavenVersionsResolver.Factory.class);
+        MavenVersionsResolver resolver = mock(MavenVersionsResolver.class);
+        File resolvedArtifactFile = mock(File.class);
+
+        when(factory.create(any())).thenReturn(resolver);
+        when(resolver.resolveChannelMetadata(eq(List.of(
+                new ChannelMetadataCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0", "blocklist", "yaml")))))
+                .thenReturn(List.of(this.getClass().getClassLoader().getResource("channels/test-blocklist-with-versionPattern.yaml")));
+        when(resolver.getAllVersions("org.wildfly", "wildfly-ee-galleon-pack", null, null)).thenReturn(new HashSet<>(Set.of("25.0.0.Final", "25.0.1.Final")));
+        when(resolver.resolveArtifact("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.0.Final")).thenReturn(resolvedArtifactFile);
+        final List<Channel> channels = mockChannelWithBlocklist(resolver, tempDir, manifest);
+
+        try (ChannelSession session = new ChannelSession(channels, factory)) {
+
+            MavenArtifact artifact = session.resolveMavenArtifact("org.wildfly", "wildfly-ee-galleon-pack", null, null, "25.0.0.Final");
+            assertNotNull(artifact);
+
+            assertEquals("org.wildfly", artifact.getGroupId());
+            assertEquals("wildfly-ee-galleon-pack", artifact.getArtifactId());
+            assertNull(artifact.getExtension());
+            assertNull(artifact.getClassifier());
+            assertEquals("25.0.0.Final", artifact.getVersion());
+            assertEquals(resolvedArtifactFile, artifact.getFile());
+        }
+
+        verify(resolver, times(2)).close();
     }
 
     private static List<Channel> mockChannelWithBlocklist(MavenVersionsResolver resolver, Path tempDir, String... manifests) throws IOException {
@@ -376,7 +415,7 @@ public class ChannelWithBlocklistTestCase {
             channels.add(new Channel(null, null, null, null,
                     emptyList(),
                     new ChannelManifestCoordinate("org.channels", "channel" + i, "1.0.0"),
-                    new BlocklistCoordinate("org.wildfly", "wildfly-blocklist", Pattern.compile(".*"))));
+                    new ChannelManifestCoordinate("org.wildfly", "wildfly-blocklist", "1.0.0")));
             String manifest = manifests[i];
             Path manifestFile = Files.writeString(tempDir.resolve("manifest" + i +".yaml"), manifest);
 

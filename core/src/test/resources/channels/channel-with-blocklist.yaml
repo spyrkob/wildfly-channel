@@ -7,9 +7,7 @@ vendor:
   name: My Vendor
   support: community
 blocklist:
-  groupId: org.wildfly
-  artifactId: blocklist
-  versionPattern: ".*"
+  gav: org.wildfly:wildfly-blocklist
 repositories:
   - id: test
     url: http://test.te
