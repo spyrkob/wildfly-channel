@@ -60,7 +60,7 @@ public class VersionResolverFactory implements MavenVersionsResolver.Factory {
     private static final Logger LOG = Logger.getLogger(VersionResolverFactory.class);
 
     public static final RepositoryPolicy DEFAULT_REPOSITORY_POLICY = new RepositoryPolicy(true, RepositoryPolicy.UPDATE_POLICY_ALWAYS, RepositoryPolicy.CHECKSUM_POLICY_FAIL);
-    private static final Function<Repository, RemoteRepository> DEFAULT_REPOSITORY_MAPPER = r -> new RemoteRepository.Builder(r.getId(), "default", r.getUrl())
+    public static final Function<Repository, RemoteRepository> DEFAULT_REPOSITORY_MAPPER = r -> new RemoteRepository.Builder(r.getId(), "default", r.getUrl())
             .setPolicy(DEFAULT_REPOSITORY_POLICY)
             .build();
 

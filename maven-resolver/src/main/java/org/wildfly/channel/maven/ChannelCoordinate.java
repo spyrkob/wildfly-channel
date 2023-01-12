@@ -44,4 +44,15 @@ public class ChannelCoordinate extends ChannelMetadataCoordinate {
     public ChannelCoordinate(URL url) {
         super(url);
     }
+    
+    @Override
+    public String getClassifier() {
+        return Channel.CLASSIFIER;
+    }
+
+    @Override
+    public String getExtension() {
+        return Channel.EXTENSION;
+    }
+
 }
