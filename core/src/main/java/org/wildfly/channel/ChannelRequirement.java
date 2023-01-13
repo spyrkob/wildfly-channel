@@ -21,6 +21,8 @@ import static java.util.Objects.requireNonNull;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -59,6 +61,7 @@ public class ChannelRequirement {
         return artifactId;
     }
 
+    @JsonInclude(NON_NULL)
     public String getVersion() {
         return version;
     }
