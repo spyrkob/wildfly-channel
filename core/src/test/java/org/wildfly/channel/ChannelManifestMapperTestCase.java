@@ -30,7 +30,7 @@ public class ChannelManifestMapperTestCase {
 
     @Test
     public void testWriteReadChannel() throws Exception {
-        final ChannelManifest manifest = new ChannelManifest("test_name", "test_desc", Collections.emptyList());
+        final ChannelManifest manifest = new ChannelManifest("test_name", null, "test_desc", Collections.emptyList());
         final String yaml = ChannelManifestMapper.toYaml(manifest);
 
         final ChannelManifest manifest1 = ChannelManifestMapper.fromString(yaml);
@@ -39,11 +39,10 @@ public class ChannelManifestMapperTestCase {
 
     @Test
     public void testWriteMultipleChannels() throws Exception {
-        final ChannelRequirement req = new ChannelRequirement("org", "foo", "1.2.3");
         final Stream stream1 = new Stream("org.bar", "example", "1.2.3");
         final Stream stream2 = new Stream("org.bar", "other-example", Pattern.compile("\\.*"));
-        final ChannelManifest manifest1 = new ChannelManifest("test_name_1", "test_desc", Arrays.asList(stream1, stream2));
-        final ChannelManifest manifest2 = new ChannelManifest("test_name_2", "test_desc", Collections.emptyList());
+        final ChannelManifest manifest1 = new ChannelManifest("test_name_1", null, "test_desc", Arrays.asList(stream1, stream2));
+        final ChannelManifest manifest2 = new ChannelManifest("test_name_2", null, "test_desc", Collections.emptyList());
         final String yaml1 = ChannelManifestMapper.toYaml(manifest1);
         final String yaml2 = ChannelManifestMapper.toYaml(manifest2);
 
@@ -66,5 +65,23 @@ public class ChannelManifestMapperTestCase {
 
         Channel channel = ChannelMapper.from(file);
         assertNotNull(channel);
+    }
+
+    @Test
+    public void testWriteRequires() throws Exception {
+        final ChannelManifest manifest = new ManifestBuilder()
+                .setId("test-id")
+                .addRequires("required-id", "org.test", "required", "1.0.0")
+                .build();
+
+        final String yaml1 = ChannelManifestMapper.toYaml(manifest);
+        System.out.println(yaml1);
+        final ChannelManifest m1 = ChannelManifestMapper.fromString(yaml1);
+
+        assertEquals("test-id", m1.getId());
+        assertEquals("required-id", m1.getManifestRequirements().get(0).getId());
+        assertEquals("org.test", m1.getManifestRequirements().get(0).getGroupId());
+        assertEquals("required", m1.getManifestRequirements().get(0).getArtifactId());
+        assertEquals("1.0.0", m1.getManifestRequirements().get(0).getVersion());
     }
 }

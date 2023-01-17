@@ -57,7 +57,7 @@ public class ChannelSessionTestCase {
     private Path tempDir;
 
     @Test
-    public void testFindLatestMavenArtifactVersion() throws UnresolvedMavenArtifactException, IOException {
+    public void testFindLatestMavenArtifactVersion() throws Exception {
         String manifest =
                 "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
@@ -97,7 +97,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testFindLatestMavenArtifactVersionThrowsUnresolvedMavenArtifactException() throws UnresolvedMavenArtifactException, IOException {
+    public void testFindLatestMavenArtifactVersionThrowsUnresolvedMavenArtifactException() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.wildfly\n" +
@@ -125,7 +125,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveLatestMavenArtifact() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveLatestMavenArtifact() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.wildfly\n" +
@@ -159,7 +159,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveLatestMavenArtifactThrowUnresolvedMavenArtifactException() throws IOException {
+    public void testResolveLatestMavenArtifactThrowUnresolvedMavenArtifactException() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "schemaVersion: 1.0.0\n" +
                 "streams:\n" +
@@ -188,7 +188,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveDirectMavenArtifact() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveDirectMavenArtifact() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.foo\n" +
@@ -226,7 +226,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveMavenArtifactsFromOneChannel() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveMavenArtifactsFromOneChannel() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                                                              "streams:\n" +
                                                              "  - groupId: org.foo\n" +
@@ -273,7 +273,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveMavenArtifactsFromTwoChannel() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveMavenArtifactsFromTwoChannel() throws Exception {
         String manifest1 = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                                                              "streams:\n" +
                                                              "  - groupId: org.foo\n" +
@@ -335,7 +335,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveDirectMavenArtifacts() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveDirectMavenArtifacts() throws Exception {
         String manifest = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                                                              "streams:\n" +
                                                              "  - groupId: org.not\n" +
@@ -379,7 +379,7 @@ public class ChannelSessionTestCase {
     }
 
     @Test
-    public void testResolveMavenArtifactsFromTwoChannelsWithSameStream() throws UnresolvedMavenArtifactException, IOException {
+    public void testResolveMavenArtifactsFromTwoChannelsWithSameStream() throws Exception {
         String manifest1 = "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +
                 "streams:\n" +
                 "  - groupId: org.foo\n" +

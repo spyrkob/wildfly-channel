@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.wildfly.channel.ChannelManifest;
 import org.wildfly.channel.ChannelManifestMapper;
+import org.wildfly.channel.ManifestRequirement;
 import org.wildfly.channel.Stream;
 
 import java.io.IOException;
@@ -95,5 +96,23 @@ public class ChannelManifestTestCase {
                 "  with no stream");
 
         assertTrue(manifest.getStreams().isEmpty());
+    }
+
+    @Test
+    public void manifestWithRequires() {
+        ChannelManifest channelManifest = ChannelManifestMapper.fromString("schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n"
+                +"name: My Channel\n" +
+                "description: |-\n" +
+                "  This is my manifest\n" +
+                "requires:\n" +
+                "  - id: test\n" +
+                "    maven:\n" +
+                "      groupId: org.foo.channels\n" +
+                "      artifactId: my-required-channel\n");
+
+        assertEquals(1, channelManifest.getManifestRequirements().size());
+        ManifestRequirement requirement = channelManifest.getManifestRequirements().get(0);
+        assertEquals("org.foo.channels", requirement.getGroupId());
+        assertEquals("my-required-channel", requirement.getArtifactId());
     }
 }

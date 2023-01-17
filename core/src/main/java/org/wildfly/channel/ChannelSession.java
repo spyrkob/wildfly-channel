@@ -21,6 +21,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,7 @@ import org.wildfly.channel.version.VersionMatcher;
 public class ChannelSession implements AutoCloseable {
     private final List<Channel> channels;
     private final ChannelRecorder recorder = new ChannelRecorder();
+    // resolver used for direct dependencies only. Uses combination of all repositories in the channels.
     private final MavenVersionsResolver combinedResolver;
 
     /**
@@ -43,16 +45,21 @@ public class ChannelSession implements AutoCloseable {
      *
      * @param channels the list of channels to resolve Maven artifact
      * @param factory Factory to create {@code MavenVersionsResolver} that are performing the actual Maven resolution.
+     * @throws UnresolvedRequiredManifestException - if a required manifest cannot be resolved either via maven coordinates or in the list of channels
+     * @throws CyclicDependencyException - if the required manifests form a cyclic dependency
      */
     public ChannelSession(List<Channel> channels, MavenVersionsResolver.Factory factory) {
         requireNonNull(channels);
         requireNonNull(factory);
         final Set<Repository> repositories = channels.stream().flatMap(c -> c.getRepositories().stream()).collect(Collectors.toSet());
         this.combinedResolver = factory.create(repositories);
-        this.channels = channels;
         for (Channel channel : channels) {
-            channel.init(factory);
+            channel.init(factory, channels);
         }
+        // filter out channels marked as dependency, so that resolution starts only at top level channels
+        this.channels = channels.stream().filter(c->!c.isDependency()).collect(Collectors.toList());
+
+        validateNoDuplicatedManifests();
     }
 
     /**
@@ -206,6 +213,13 @@ public class ChannelSession implements AutoCloseable {
      */
     public ChannelManifest getRecordedChannel() {
         return recorder.getRecordedChannel();
+    }
+
+    private void validateNoDuplicatedManifests() {
+        final List<String> manifestIds = this.channels.stream().map(c -> c.getManifest().getId()).filter(id -> id != null).collect(Collectors.toList());
+        if (manifestIds.size() != new HashSet<>(manifestIds).size()) {
+            throw new RuntimeException("The same manifest is provided by one or more channels");
+        }
     }
 
     private Channel.ResolveLatestVersionResult findChannelWithLatestVersion(String groupId, String artifactId, String extension, String classifier, String baseVersion) throws UnresolvedMavenArtifactException {

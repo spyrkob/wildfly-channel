@@ -22,12 +22,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
+/**
+ * Java representation of Repository
+ */
 public class Repository {
+    /**
+     * ID of the repository.
+     * Can be used to identify repository mirrors and proxies.
+     */
     private String id;
+    /**
+     * URL of the repository.
+     * Used when the client doesn't provide alternative URLs for a repository.
+     */
     private String url;
 
     @JsonCreator
-    public Repository(@JsonProperty(value = "id") String id, @JsonProperty(value = "url") String url) {
+    public Repository(@JsonProperty(value = "id", required = true) String id, @JsonProperty(value = "url", required = true) String url) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(url);
+
         this.id = id;
         this.url = url;
     }

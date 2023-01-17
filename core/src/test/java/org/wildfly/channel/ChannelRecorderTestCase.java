@@ -46,7 +46,7 @@ public class ChannelRecorderTestCase {
     private Path tempDir;
 
     @Test
-    public void testChannelRecorder() throws IOException, UnresolvedMavenArtifactException {
+    public void testChannelRecorder() throws Exception {
 
         String manifest1 = "---\n" +
                 "schemaVersion: " + CURRENT_SCHEMA_VERSION + "\n" +

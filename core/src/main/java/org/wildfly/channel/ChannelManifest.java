@@ -22,7 +22,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,6 +54,12 @@ public class ChannelManifest {
     private final String name;
 
     /**
+     * Optional manifest ID.
+     * Alphanumeric identifier of manifest.
+     */
+    private final String id;
+
+    /**
      * Optional description of the manifest. It can use multiple lines.
      */
     private final String description;
@@ -61,16 +70,42 @@ public class ChannelManifest {
     private Set<Stream> streams;
 
     /**
+     * Optional list of manifests that should be checked if artifact cannot be found in this manifest.
+     */
+    private List<ManifestRequirement> manifestRequirements;
+
+    /**
      * Representation of a ChannelManifest resource using the current schema version.
      *
-     * @see #ChannelManifest(String, String, String, Collection)
+     * @see #ChannelManifest(String, String, String, String, Collection, Collection)
      */
     public ChannelManifest(String name,
+                           String id,
                            String description,
                            Collection<Stream> streams) {
         this(ChannelManifestMapper.CURRENT_SCHEMA_VERSION,
                 name,
+                id,
                 description,
+                Collections.emptyList(),
+                streams);
+    }
+
+    /**
+     * Representation of a ChannelManifest resource using the current schema version.
+     *
+     * @see #ChannelManifest(String, String, String, String, Collection, Collection)
+     */
+    public ChannelManifest(String name,
+                           String id,
+                           String description,
+                           Collection<ManifestRequirement> manifestRequirements,
+                           Collection<Stream> streams) {
+        this(ChannelManifestMapper.CURRENT_SCHEMA_VERSION,
+                name,
+                id,
+                description,
+                manifestRequirements,
                 streams);
     }
 
@@ -86,11 +121,18 @@ public class ChannelManifest {
     @JsonPropertyOrder({ "schemaVersion", "name", "description", "streams" })
     public ChannelManifest(@JsonProperty(value = "schemaVersion", required = true) String schemaVersion,
                            @JsonProperty(value = "name") String name,
+                           @JsonProperty(value = "id") String id,
                            @JsonProperty(value = "description") String description,
+                           @JsonProperty(value = "requires") Collection<ManifestRequirement> manifestRequirements,
                            @JsonProperty(value = "streams") Collection<Stream> streams) {
         this.schemaVersion = schemaVersion;
         this.name = name;
+        this.id = id;
         this.description = description;
+        this.manifestRequirements = new ArrayList<>();
+        if (manifestRequirements != null) {
+            this.manifestRequirements.addAll(manifestRequirements);
+        }
         this.streams = new TreeSet<>();
         if (streams != null) {
             this.streams.addAll(streams);
@@ -108,8 +150,19 @@ public class ChannelManifest {
     }
 
     @JsonInclude(NON_NULL)
+    public String getId() {
+        return id;
+    }
+
+    @JsonInclude(NON_NULL)
     public String getDescription() {
         return description;
+    }
+
+    @JsonInclude(NON_EMPTY)
+    @JsonProperty(value = "requires")
+    public List<ManifestRequirement> getManifestRequirements() {
+        return manifestRequirements;
     }
 
     @JsonInclude(NON_EMPTY)
