@@ -30,7 +30,7 @@ public class ChannelCoordinate extends ChannelMetadataCoordinate {
     // empty constructor used by the wildlfy-maven-plugin
     // through reflection
     public ChannelCoordinate() {
-        super();
+        super(Channel.CLASSIFIER, Channel.EXTENSION);
     }
 
     public ChannelCoordinate(String groupId, String artifactId, String version) {
@@ -44,15 +44,4 @@ public class ChannelCoordinate extends ChannelMetadataCoordinate {
     public ChannelCoordinate(URL url) {
         super(url);
     }
-    
-    @Override
-    public String getClassifier() {
-        return Channel.CLASSIFIER;
-    }
-
-    @Override
-    public String getExtension() {
-        return Channel.EXTENSION;
-    }
-
 }

@@ -107,7 +107,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "base-manifest", "1.0.0")
                         .build()
                 );
-        assertThrows(UnresolvedRequiredManifestException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(UnresolvedRequiredManifestException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -130,7 +130,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "base-manifest", "1.0.0")
                         .build()
         );
-        assertThrows(UnresolvedRequiredManifestException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(UnresolvedRequiredManifestException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -204,7 +204,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "required-manifest", "1.0.0")
                         .build()
         );
-        assertThrows(CyclicDependencyException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(CyclicDependencyException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -248,7 +248,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "required-manifest-two", "1.0.0")
                         .build()
         );
-        assertThrows(CyclicDependencyException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(CyclicDependencyException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -270,7 +270,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "base-manifest", "1.0.0")
                         .build()
         );
-        assertThrows(CyclicDependencyException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(CyclicDependencyException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -325,7 +325,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "required-manifest-three", "1.0.0")
                         .build()
         );
-        assertThrows(CyclicDependencyException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(CyclicDependencyException.class, () -> new ChannelSession(channels, factory));
     }
 
     @Test
@@ -356,7 +356,7 @@ public class ChannelSessionInitTestCase {
                         .setManifestCoordinate("test.channels", "required-manifest", "1.0.0")
                         .build()
         );
-        assertThrows(RuntimeException.class, ()->new ChannelSession(channels, factory));
+        assertThrows(RuntimeException.class, () -> new ChannelSession(channels, factory));
     }
 
     private void mockManifest(MavenVersionsResolver resolver, ChannelManifest manifest, String gav) throws IOException {

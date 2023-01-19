@@ -108,8 +108,7 @@ public class ChannelMapper {
             if (!messages.isEmpty()) {
                 throw new InvalidChannelException("Invalid channel", messages);
             }
-            Channel channel = OBJECT_MAPPER.readValue(channelURL, Channel.class);
-            return channel;
+            return OBJECT_MAPPER.readValue(channelURL, Channel.class);
         } catch (IOException | URISyntaxException e) {
             throw wrapException(e);
         }
@@ -125,8 +124,7 @@ public class ChannelMapper {
             }
 
             YAMLParser parser = YAML_FACTORY.createParser(yamlContent);
-            List<Channel> channels = OBJECT_MAPPER.readValues(parser, Channel.class).readAll();
-            return channels;
+            return OBJECT_MAPPER.readValues(parser, Channel.class).readAll();
         } catch (IOException e) {
             throw wrapException(e);
         }

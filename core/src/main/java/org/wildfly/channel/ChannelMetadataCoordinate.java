@@ -66,6 +66,10 @@ public class ChannelMetadataCoordinate {
         this.url = url;
     }
 
+    protected ChannelMetadataCoordinate(String classifier, String extension) {
+        this(null, null, null, classifier, extension, null);
+    }
+
     public String getGroupId() {
         return groupId;
     }
