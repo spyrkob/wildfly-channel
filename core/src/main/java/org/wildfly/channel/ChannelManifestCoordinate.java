@@ -44,6 +44,9 @@ public class ChannelManifestCoordinate extends ChannelMetadataCoordinate {
     public ChannelManifestCoordinate(URL url) {
         super(url);
     }
+    
+    public ChannelManifestCoordinate() {
+    }
 
     @JsonCreator
     public static ChannelManifestCoordinate create(@JsonProperty(value = "url") String url, @JsonProperty(value = "maven") MavenCoordinate gav) throws MalformedURLException {
@@ -76,5 +79,15 @@ public class ChannelManifestCoordinate extends ChannelMetadataCoordinate {
     @Override
     public URL getUrl() {
         return super.getUrl();
+    }
+    
+    @Override
+    public String getClassifier() {
+        return ChannelManifest.CLASSIFIER;
+    }
+
+    @Override
+    public String getExtension() {
+        return ChannelManifest.EXTENSION;
     }
 }

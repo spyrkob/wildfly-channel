@@ -40,6 +40,10 @@ public class BlocklistCoordinate extends ChannelMetadataCoordinate {
    public BlocklistCoordinate(URL url) {
       super(url);
    }
+   
+   public BlocklistCoordinate() {
+
+   }
 
    @JsonCreator
    public static BlocklistCoordinate create(@JsonProperty(value = "maven") MavenCoordinate coord,
@@ -66,4 +70,14 @@ public class BlocklistCoordinate extends ChannelMetadataCoordinate {
    public MavenCoordinate getMaven(){
       return new MavenCoordinate(getGroupId(), getArtifactId(), getVersion());
    }
+   
+    @Override
+    public String getClassifier() {
+        return CLASSIFIER;
+    }
+
+    @Override
+    public String getExtension() {
+        return EXTENSION;
+    }
 }

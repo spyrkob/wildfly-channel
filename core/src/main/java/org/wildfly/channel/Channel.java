@@ -9,6 +9,7 @@ import org.wildfly.channel.version.VersionMatcher;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import java.util.ArrayList;
 import static java.util.Collections.emptyList;
 
 public class Channel {
@@ -38,14 +39,14 @@ public class Channel {
      * This is an optional field.
      */
     private Vendor vendor;
-    private List<Repository> repositories;
+    private List<Repository> repositories = new ArrayList<>();
     private BlocklistCoordinate blocklistCoordinate;
     private ChannelManifestCoordinate manifestCoordinate;
-    private NoStreamStrategy noStreamStrategy;
+    private NoStreamStrategy noStreamStrategy = NoStreamStrategy.ORIGINAL;
 
     // no-arg constructor for maven plugins
     public Channel() {
-
+        schemaVersion = ChannelMapper.CURRENT_SCHEMA_VERSION;
     }
 
     /**
@@ -94,30 +95,37 @@ public class Channel {
         return schemaVersion;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getName() {
         return name;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getDescription() {
         return description;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Vendor getVendor() {
         return vendor;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<Repository> getRepositories() {
         return repositories;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public BlocklistCoordinate getBlocklistCoordinate() {
         return blocklistCoordinate;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public ChannelManifestCoordinate getManifestCoordinate() {
         return manifestCoordinate;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public NoStreamStrategy getNoStreamStrategy() {
         return noStreamStrategy;
     }
