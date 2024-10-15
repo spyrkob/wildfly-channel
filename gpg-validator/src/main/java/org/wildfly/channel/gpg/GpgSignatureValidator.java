@@ -134,7 +134,7 @@ public class GpgSignatureValidator implements SignatureValidator {
                 }
             } catch (PGPException | IOException e) {
                 throw new SignatureException("Unable to parse the certificate downloaded from keyserver", e,
-                        SignatureResult.noSignature(artifactId));
+                        SignatureResult.noSignature(artifactId), keyID);
             }
 
             if (key == null) {
@@ -146,7 +146,7 @@ public class GpgSignatureValidator implements SignatureValidator {
                         pgpPublicKeys = downloadPublicKey(gpgUrl);
                     } catch (IOException e) {
                         throw new SignatureException("Unable to parse the certificate downloaded from " + gpgUrl, e,
-                                SignatureResult.noSignature(artifactId));
+                                SignatureResult.noSignature(artifactId), Long.toHexString(pgpSignature.getKeyID()).toUpperCase(Locale.ROOT));
                     }
                     if (pgpPublicKeys.stream().anyMatch(k -> k.getKeyID() == pgpSignature.getKeyID())) {
                         key = pgpPublicKeys.stream().filter(k -> k.getKeyID() == pgpSignature.getKeyID()).findFirst().get();
@@ -193,7 +193,7 @@ public class GpgSignatureValidator implements SignatureValidator {
             pgpSignature.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
         } catch (PGPException e) {
             throw new SignatureException("Unable to verify the signature using key " + keyID, e,
-                    SignatureResult.invalid(artifactId));
+                    SignatureResult.invalid(artifactId), keyID);
         }
         final SignatureResult result = verifyFile(artifactId, artifactStream, pgpSignature);
 
@@ -291,7 +291,7 @@ public class GpgSignatureValidator implements SignatureValidator {
             }
         } catch (PGPException e) {
             throw new SignatureException("Unable to verify the file signature", e,
-                    SignatureResult.invalid(artifactSource));
+                    SignatureResult.invalid(artifactSource), Long.toHexString(pgpSignature.getKeyID()).toUpperCase(Locale.ROOT));
         }
     }
 

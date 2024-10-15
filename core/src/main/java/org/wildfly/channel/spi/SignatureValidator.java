@@ -48,6 +48,13 @@ public interface SignatureValidator {
      */
     class SignatureException extends RuntimeException {
         private final SignatureResult signatureResult;
+        private String missingSignature;
+
+        public SignatureException(String message, Throwable cause, SignatureResult signatureResult, String missingSignature) {
+            super(message, cause);
+            this.signatureResult = signatureResult;
+            this.missingSignature = missingSignature;
+        }
 
         public SignatureException(String message, Throwable cause, SignatureResult signatureResult) {
             super(message, cause);
@@ -61,6 +68,10 @@ public interface SignatureValidator {
 
         public SignatureResult getSignatureResult() {
             return signatureResult;
+        }
+
+        public String getMissingSignature() {
+            return missingSignature;
         }
     }
 }
